@@ -9,6 +9,8 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
 import kttots.utils.ClassMapper
@@ -30,17 +32,29 @@ import kttots.utils.prettyPrint
 // TODO[tmpl] problem if an objectType in CommandResponse... should be smarter
 // support Jackson annotations
 
+fun debug(t: String) {
+    Files.write(
+        Paths.get("/Users/mlo/git/ktts-webapp-sample/debug.txt"),
+        (t + "\n").toByteArray(Charsets.UTF_8),
+        StandardOpenOption.APPEND)
+}
+
 class KtToTsSymbolProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
     val options: Map<String, String>
 ) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        debug("go")
         val startTime = System.currentTimeMillis()
         val symbols =
             resolver
                 .getSymbolsWithAnnotation(GenerateTypescript::class.java.name)
                 .filterIsInstance<KSClassDeclaration>()
+        // TODO remove
+        val configuration = KtToTsConfiguration.init(options)
+        debug(configuration.prettyPrint())
+        debug(symbols.toList().map { it.containingFile?.fileName }.toString())
         // TODO[tmpl] what happens if no file ?
         if (!symbols.iterator().hasNext()) return emptyList()
         processFiles(symbols, startTime)
@@ -50,6 +64,7 @@ class KtToTsSymbolProcessor(
 
     fun processFiles(symbols: Sequence<KSClassDeclaration>, startTime: Long) {
         val configuration = KtToTsConfiguration.init(options)
+        debug(configuration.prettyPrint())
         val debugReport = if (configuration.debugFile != null) StringBuilder() else null
         debugReport?.appendLine("<html><body><pre>")
         debugReport?.appendLine("Start generation ${LocalDateTime.now()}")
