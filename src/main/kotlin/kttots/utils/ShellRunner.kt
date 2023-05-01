@@ -13,8 +13,6 @@ object ShellRunner {
         val errorOutput: List<String>
     )
 
-    private val logger = KotlinLogging.logger {}
-
     fun run(command: String, vararg params: String): CommandResult = doRun(null, command, *params)
 
     fun run(directory: Path, command: String, vararg params: String): CommandResult =
@@ -32,7 +30,6 @@ object ShellRunner {
                 }
             }
         val fullCommand = command + params.fold("") { acc, s -> "$acc $s" }
-        logger.debug { "Run '$fullCommand' ${if(directory != null) "in $directory" else ""}" }
         builder.command("sh", "-c", fullCommand)
         val process = builder.start()
         val (output, outputThread) = outputThread(process.inputStream, "Command output:")
@@ -40,7 +37,6 @@ object ShellRunner {
         val result = process.waitFor()
         outputThread.join()
         errorThread.join()
-        logger.debug { "Command result: $result" }
         return CommandResult(result, output, error)
     }
 
@@ -51,7 +47,6 @@ object ShellRunner {
                     val s = Scanner(inputStream)
                     while (s.hasNextLine()) {
                         val l = s.nextLine()
-                        logger.debug { "$logPrefix $l" }
                         result.add(l)
                     }
                 }

@@ -1,7 +1,11 @@
 plugins {
-    java
-    kotlin("jvm") version "1.8.21"
-    `maven-publish`
+    kotlin("jvm") version "1.8.0" apply false
+}
+
+buildscript {
+    dependencies {
+        classpath(kotlin("gradle-plugin", version = "1.8.0"))
+    }
 }
 
 repositories {
@@ -10,12 +14,8 @@ repositories {
 }
 
 tasks {
-    compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
+    compileKotlin { kotlinOptions.jvmTarget = "1.8" }
+    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
 }
 
 publishing {
@@ -32,8 +32,6 @@ publishing {
 
 dependencies {
     implementation("ktts:ktts-annotations:1.0.0")
-
-    implementation("io.github.microutils:kotlin-logging:3.0.0")
 
     implementation("com.google.devtools.ksp:symbol-processing-api:1.7.21-1.0.8")
     implementation("org.json:json:20220320")
