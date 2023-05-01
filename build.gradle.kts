@@ -3,21 +3,21 @@ plugins {
     `maven-publish`
 }
 
-//buildscript {
-//    dependencies {
-//        classpath(kotlin("gradle-plugin", version = "1.8.0"))
-//    }
-//}
+buildscript {
+    dependencies {
+        classpath(kotlin("gradle-plugin", version = "1.8.0"))
+    }
+}
 
 repositories {
     mavenCentral()
     mavenLocal()
 }
 
-//tasks {
-//    compileKotlin { kotlinOptions.jvmTarget = "1.8" }
-//    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
-//}
+tasks {
+    compileKotlin { kotlinOptions.jvmTarget = "1.8" }
+    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
+}
 
 publishing {
     publications {
