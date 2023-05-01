@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.8.0" //apply false
+    `maven-publish`
 }
 
 //buildscript {
@@ -18,17 +19,17 @@ repositories {
 //    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
 //}
 
-//publishing {
-//    publications {
-//        create<MavenPublication>("maven") {
-//            groupId = "ktts"
-//            artifactId = "ktts"
-//            version = "1.0.0"
-//
-//            from(components["kotlin"])
-//        }
-//    }
-//}
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "ktts"
+            artifactId = "ktts"
+            version = "1.0.0"
+
+            from(components["kotlin"])
+        }
+    }
+}
 
 dependencies {
     implementation("ktts:ktts-annotations:1.0.0")
