@@ -8,6 +8,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
+import java.nio.file.Files
+import java.time.LocalDateTime
+import kotlin.io.path.absolutePathString
 import kttots.utils.ClassMapper
 import kttots.utils.ClassParser
 import kttots.utils.ClassWriter
@@ -17,10 +20,6 @@ import kttots.utils.ImportWriter.relativePath
 import kttots.utils.KtToTsConfiguration
 import kttots.utils.ShellRunner
 import kttots.utils.prettyPrint
-import java.nio.file.Files
-import java.time.LocalDateTime
-import kotlin.io.path.absolutePathString
-import kttots.GenerateTypescript
 
 // TODO[tmpl] use exceptions and catch them for debug report ?
 // TODO[tmpl] clean !!
@@ -30,6 +29,7 @@ import kttots.GenerateTypescript
 // TODO[tmpl] see ExtensionContainer to extend the plugin
 // TODO[tmpl] problem if an objectType in CommandResponse... should be smarter
 // support Jackson annotations
+
 class KtToTsSymbolProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
@@ -171,6 +171,9 @@ class KtToTsSymbolProcessor(
         // }
         //        }
         resultFiles.forEach {
+            val destination =
+                configuration.srcDirectory.resolve(kotlinToTsFile(it.first, configuration))
+            destination.parent.toFile().mkdirs()
             // TODO[fmk] format before writing file to avoid triggering webpack hot reload, useless
             // temporary diffs...
             ShellRunner.run(
@@ -184,9 +187,7 @@ class KtToTsSymbolProcessor(
                 "&&",
                 "mv",
                 it.second.absolutePathString(),
-                configuration.srcDirectory
-                    .resolve(kotlinToTsFile(it.first, configuration))
-                    .absolutePathString())
+                destination.absolutePathString())
         }
         //        tempDir.toFile().deleteRecursively()
         debugReport?.appendLine("<h1>Report</h1>")
