@@ -15,8 +15,12 @@ repositories {
 }
 
 tasks {
-    compileKotlin { kotlinOptions.jvmTarget = "1.8" }
-    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
+    compileKotlin { kotlinOptions.jvmTarget = "17" }
+    compileTestKotlin { kotlinOptions.jvmTarget = "17" }
+}
+
+sourceSets.main {
+    java.srcDirs("src/main/kotlin")
 }
 
 publishing {
@@ -32,6 +36,8 @@ publishing {
 }
 
 dependencies {
+    implementation(kotlin("stdlib"))
+
     implementation("ktts:ktts-annotations:1.0.0")
 
     implementation("com.google.devtools.ksp:symbol-processing-api:1.7.21-1.0.8")
