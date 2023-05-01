@@ -3,7 +3,6 @@ package kttots.utils
 import java.io.InputStream
 import java.nio.file.Path
 import java.util.Scanner
-import mu.KotlinLogging
 
 object ShellRunner {
 

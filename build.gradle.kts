@@ -1,34 +1,34 @@
 plugins {
-    kotlin("jvm") version "1.8.0" apply false
+    kotlin("jvm") version "1.8.0" //apply false
 }
 
-buildscript {
-    dependencies {
-        classpath(kotlin("gradle-plugin", version = "1.8.0"))
-    }
-}
+//buildscript {
+//    dependencies {
+//        classpath(kotlin("gradle-plugin", version = "1.8.0"))
+//    }
+//}
 
 repositories {
     mavenCentral()
     mavenLocal()
 }
 
-tasks {
-    compileKotlin { kotlinOptions.jvmTarget = "1.8" }
-    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
-}
+//tasks {
+//    compileKotlin { kotlinOptions.jvmTarget = "1.8" }
+//    compileTestKotlin { kotlinOptions.jvmTarget = "1.8" }
+//}
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "ktts"
-            artifactId = "ktts"
-            version = "1.0.0"
-
-            from(components["kotlin"])
-        }
-    }
-}
+//publishing {
+//    publications {
+//        create<MavenPublication>("maven") {
+//            groupId = "ktts"
+//            artifactId = "ktts"
+//            version = "1.0.0"
+//
+//            from(components["kotlin"])
+//        }
+//    }
+//}
 
 dependencies {
     implementation("ktts:ktts-annotations:1.0.0")
