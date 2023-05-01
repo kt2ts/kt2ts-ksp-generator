@@ -20,7 +20,7 @@ import com.kttswebapptemplate.tooling.kttots.prettyPrint
 import java.nio.file.Files
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
-import kttots.Shared
+import kttots.GenerateTypescript
 
 // TODO[tmpl] use exceptions and catch them for debug report ?
 // TODO[tmpl] clean !!
@@ -39,7 +39,7 @@ class KtToTsSymbolProcessor(
         val startTime = System.currentTimeMillis()
         val symbols =
             resolver
-                .getSymbolsWithAnnotation(Shared::class.java.name)
+                .getSymbolsWithAnnotation(GenerateTypescript::class.java.name)
                 .filterIsInstance<KSClassDeclaration>()
         // TODO[tmpl] what happens if no file ?
         if (!symbols.iterator().hasNext()) return emptyList()
