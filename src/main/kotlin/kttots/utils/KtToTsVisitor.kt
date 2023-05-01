@@ -1,4 +1,4 @@
-package com.kttswebapptemplate.tooling.kttots
+package kttots.utils
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSNode

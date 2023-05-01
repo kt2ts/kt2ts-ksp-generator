@@ -1,4 +1,4 @@
-package com.kttswebapptemplate.tooling.kttots
+package kttots.utils
 
 // from https://gist.github.com/Mayankmkh/92084bdf2b59288d3e74c3735cccbf9f
 fun Any.prettyPrint(): String {

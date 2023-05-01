@@ -1,9 +1,9 @@
-package com.kttswebapptemplate.tooling.kttots
+package kttots.utils
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Nullability
-import com.kttswebapptemplate.tooling.kttots.ClassWriter.propertyClassName
+import kttots.utils.ClassWriter.propertyClassName
 
 object ClassMapper {
 
@@ -51,6 +51,7 @@ object ClassMapper {
         }
     }
 
+    // TODO remove
     val nominalClasses =
         setOf(
             "com.kttswebapptemplate.domain.TemplateSampleId",

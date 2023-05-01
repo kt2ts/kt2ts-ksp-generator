@@ -1,11 +1,11 @@
-package com.kttswebapptemplate.tooling.kttots
+package kttots.utils
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
-import com.kttswebapptemplate.tooling.kttots.ClassMapper.mapProperty
+import kttots.utils.ClassMapper.mapProperty
 
 // TODO[tmpl] name
 object ClassParser {

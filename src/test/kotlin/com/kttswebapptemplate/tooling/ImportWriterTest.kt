@@ -1,7 +1,7 @@
-package com.kttswebapptemplate.tooling
+package kttots
 
-import com.kttswebapptemplate.tooling.kttots.ImportWriter.relativePath
-import com.kttswebapptemplate.tooling.kttots.KtToTsConfiguration
+import kttots.utils.ImportWriter.relativePath
+import kttots.utils.KtToTsConfiguration
 import java.nio.file.Paths
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

@@ -1,4 +1,4 @@
-package com.kttswebapptemplate.tooling
+package kttots
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
@@ -8,15 +8,15 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
-import com.kttswebapptemplate.tooling.kttots.ClassMapper
-import com.kttswebapptemplate.tooling.kttots.ClassParser
-import com.kttswebapptemplate.tooling.kttots.ClassWriter
-import com.kttswebapptemplate.tooling.kttots.Debug
-import com.kttswebapptemplate.tooling.kttots.ImportWriter.kotlinToTsFile
-import com.kttswebapptemplate.tooling.kttots.ImportWriter.relativePath
-import com.kttswebapptemplate.tooling.kttots.KtToTsConfiguration
-import com.kttswebapptemplate.tooling.kttots.ShellRunner
-import com.kttswebapptemplate.tooling.kttots.prettyPrint
+import kttots.utils.ClassMapper
+import kttots.utils.ClassParser
+import kttots.utils.ClassWriter
+import kttots.utils.Debug
+import kttots.utils.ImportWriter.kotlinToTsFile
+import kttots.utils.ImportWriter.relativePath
+import kttots.utils.KtToTsConfiguration
+import kttots.utils.ShellRunner
+import kttots.utils.prettyPrint
 import java.nio.file.Files
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString

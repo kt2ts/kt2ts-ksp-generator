@@ -1,4 +1,4 @@
-package com.kttswebapptemplate.tooling
+package kttots
 
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment

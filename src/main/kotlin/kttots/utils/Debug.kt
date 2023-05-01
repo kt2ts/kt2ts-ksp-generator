@@ -1,4 +1,4 @@
-package com.kttswebapptemplate.tooling.kttots
+package kttots.utils
 
 object Debug {
 
