@@ -33,28 +33,28 @@ data class Kt2TsConfiguration(
     companion object {
         fun init(options: Map<String, String>): Kt2TsConfiguration {
             val destination =
-                options["kt2Ts:clientDirectory"]?.let { Paths.get(it) }
+                options["kt2ts:clientDirectory"]?.let { Paths.get(it) }
                     ?: throw IllegalArgumentException()
             return Kt2TsConfiguration(
                 clientDirectory = destination,
-                srcDirectory = destination.resolve(options["kt2Ts:srcDirectory"] ?: "src"),
-                generatedDirectory = options["kt2Ts:generatedDirectory"] ?: "generated",
-                dropPackage = options["kt2Ts:dropPackage"] ?: "",
+                srcDirectory = destination.resolve(options["kt2ts:srcDirectory"] ?: "src"),
+                generatedDirectory = options["kt2ts:generatedDirectory"] ?: "generated",
+                dropPackage = options["kt2ts:dropPackage"] ?: "",
                 mappings =
-                    options["kt2Ts:mappings"]?.let {
+                    options["kt2ts:mappings"]?.let {
                         Paths.get(it).readText().let {
                             JSONObject(it).toMap().mapValues { e -> e.value.toString() }
                         }
                     }
                         ?: emptyMap(),
                 nominalStringMappings =
-                    options["kt2Ts:nominalStringMappings"]?.let { it.split("|").toSet() }
+                    options["kt2ts:nominalStringMappings"]?.let { it.split("|").toSet() }
                         ?: emptySet(),
-                nominalStringImport = options["kt2Ts:nominalStringImport"],
+                nominalStringImport = options["kt2ts:nominalStringImport"],
                 // TODO[tmpl]
                 interfaceAsTypes = emptySet(),
                 // TODO use instead of temp dir ?
-                debugFile = options["kt2Ts:debugFile"]?.let { Paths.get(it).toFile() })
+                debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() })
         }
     }
 }
