@@ -11,7 +11,6 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
@@ -144,7 +143,9 @@ class Kt2TsSymbolProcessor(
                         val classImports =
                             parsed
                                 .mapNotNull { it.type.declaration as? KSClassDeclaration }
-                                .mapNotNull { ClassMapper.mapClass(it) }
+                                .mapNotNull {
+                                    ClassMapper.mapClass(it, configuration.nominalStringMappings)
+                                }
                         dependenciesImportsMapped + dependenciesImports + classImports
                     }
                     val sb = StringBuilder()
@@ -176,7 +177,11 @@ class Kt2TsSymbolProcessor(
                     //                val keepDeclarations = parsed.map { it.type.declaration }
                     // [doc] restarting from file here (instead of using directly parsed) permits
                     // order conservation
-                    parsed.forEach { sb.append(ClassWriter.toTs(it, configuration.mappings)) }
+                    parsed.forEach {
+                        sb.append(
+                            ClassWriter.toTs(
+                                it, configuration.mappings, configuration.nominalStringMappings))
+                    }
                     Files.write(file, sb.toString().toByteArray())
                     ksFile to file
                 }

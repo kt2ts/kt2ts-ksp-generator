@@ -51,16 +51,9 @@ object ClassMapper {
         }
     }
 
-    // TODO remove
-    val nominalClasses =
-        setOf(
-            "com.kttswebapptemplate.domain.TemplateSampleId",
-            "com.kttswebapptemplate.domain.SerializeAsString",
-            "com.kttswebapptemplate.domain.PlainStringPassword")
-
-    fun mapClass(d: KSClassDeclaration): ClassMapping? {
+    fun mapClass(d: KSClassDeclaration, nominalStringMappings:Set<String>): ClassMapping? {
         val ancestry = recursiveAncestry(d).mapNotNull { it.qualifiedName?.asString() }
-        nominalClasses.forEach {
+        nominalStringMappings.forEach {
             if (it in ancestry) {
                 return ClassMapping(
                     "NominalString<'${d.simpleName.asString()}'>", "utils/nominal-class")
