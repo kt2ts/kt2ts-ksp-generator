@@ -13,14 +13,14 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
-import kttots.GenerateTypescript
+import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
 import kt2ts.kspgenerator.utils.ClassParser
 import kt2ts.kspgenerator.utils.ClassWriter
 import kt2ts.kspgenerator.utils.Debug
 import kt2ts.kspgenerator.utils.ImportWriter.kotlinToTsFile
 import kt2ts.kspgenerator.utils.ImportWriter.relativePath
-import kt2ts.kspgenerator.utils.KtToTsConfiguration
+import kt2ts.kspgenerator.utils.Kt2TsConfiguration
 import kt2ts.kspgenerator.utils.ShellRunner
 import kt2ts.kspgenerator.utils.prettyPrint
 
@@ -53,7 +53,7 @@ class Kt2TsSymbolProcessor(
                 .getSymbolsWithAnnotation(GenerateTypescript::class.java.name)
                 .filterIsInstance<KSClassDeclaration>()
         // TODO remove
-        val configuration = KtToTsConfiguration.init(options)
+        val configuration = Kt2TsConfiguration.init(options)
         debug(configuration.prettyPrint())
         debug(symbols.toList().map { it.containingFile?.fileName }.toString())
         // TODO[tmpl] what happens if no file ?
@@ -64,7 +64,7 @@ class Kt2TsSymbolProcessor(
     }
 
     fun processFiles(symbols: Sequence<KSClassDeclaration>, startTime: Long) {
-        val configuration = KtToTsConfiguration.init(options)
+        val configuration = Kt2TsConfiguration.init(options)
         debug(configuration.prettyPrint())
         val debugReport = if (configuration.debugFile != null) StringBuilder() else null
         debugReport?.appendLine("<html><body><pre>")
@@ -75,7 +75,7 @@ class Kt2TsSymbolProcessor(
             appendLine("<h1>Initial symbols selection</h1>")
             symbols.forEach { appendLine("$it") }
         }
-        //        val visitor = KtToTsVisitor()
+        //        val visitor = Kt2TsVisitor()
         // TODO[tmpl] add exceptions: mapped classes in configuration
         //        val parsingResult =
         //            symbols.fold(emptySet<ClassParser.Parsed>()) { acc, declaration ->
@@ -97,7 +97,7 @@ class Kt2TsSymbolProcessor(
         //        val typesSelection = parsingResult.map { it.declaration }
         //        val importsMap = parsingResult.associateBy { it.declaration }
         val parsingResultMap = parsingResult.associateBy { it.type.declaration }
-        val tempDir = Files.createTempDirectory("kttots-")
+        val tempDir = Files.createTempDirectory("kt2ts-")
         debugReport?.apply {
             appendLine("<h1>Temp dir </h1>")
             appendLine("${tempDir.absolutePathString()}")

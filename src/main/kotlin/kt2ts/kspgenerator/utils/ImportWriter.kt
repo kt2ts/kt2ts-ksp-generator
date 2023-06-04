@@ -5,7 +5,7 @@ import kotlin.io.path.pathString
 
 object ImportWriter {
 
-    fun kotlinToTsFile(ksFile: KSFile, conf: KtToTsConfiguration): String {
+    fun kotlinToTsFile(ksFile: KSFile, conf: Kt2TsConfiguration): String {
         val dir =
             ksFile.packageName
                 .asString()
@@ -18,7 +18,7 @@ object ImportWriter {
     }
 
     // TODO this is hell, please refactor
-    fun relativePath(filePath: String, originPath: String, conf: KtToTsConfiguration): String {
+    fun relativePath(filePath: String, originPath: String, conf: Kt2TsConfiguration): String {
         val f = cleanPath(filePath, conf)
         val o = cleanPath(originPath, conf)
         try {
@@ -59,7 +59,7 @@ object ImportWriter {
         }
     }
 
-    fun cleanPath(path: String, conf: KtToTsConfiguration) =
+    fun cleanPath(path: String, conf: Kt2TsConfiguration) =
         path
             .let {
                 if (it.startsWith(conf.clientDirectory.pathString))

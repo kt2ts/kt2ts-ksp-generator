@@ -1,7 +1,6 @@
-package kttots
+package kt2ts.kspgenerator.utils
 
 import kt2ts.kspgenerator.utils.ImportWriter.relativePath
-import kt2ts.kspgenerator.utils.KtToTsConfiguration
 import java.nio.file.Paths
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.Test
 internal class ImportWriterTest {
 
     val testConfiguration =
-        KtToTsConfiguration(
+        Kt2TsConfiguration(
             Paths.get("/client"),
             Paths.get("/client/src"),
             "generated",

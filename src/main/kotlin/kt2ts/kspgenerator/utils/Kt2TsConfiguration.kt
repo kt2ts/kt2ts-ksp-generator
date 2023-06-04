@@ -7,7 +7,7 @@ import kotlin.io.path.readText
 import org.json.JSONObject
 
 // TODO[tmpl] final command for prettier
-data class KtToTsConfiguration(
+data class Kt2TsConfiguration(
     val clientDirectory: Path,
     val srcDirectory: Path,
     // TODO naming directory with isn't a Path
@@ -17,7 +17,7 @@ data class KtToTsConfiguration(
     // => Duration, LocalDate, etc...
     // if missing, print a warning
     // and use any in generated code? or a nominalString
-    // create a @KtToTsConfiguration ?
+    // create a @Kt2TsConfiguration ?
     // => not simple, project code can't be run here
     // try to extend from gradle ?
     // TODO naming
@@ -31,30 +31,30 @@ data class KtToTsConfiguration(
     val debugFile: File?
 ) {
     companion object {
-        fun init(options: Map<String, String>): KtToTsConfiguration {
+        fun init(options: Map<String, String>): Kt2TsConfiguration {
             val destination =
-                options["ktToTs:clientDirectory"]?.let { Paths.get(it) }
+                options["kt2Ts:clientDirectory"]?.let { Paths.get(it) }
                     ?: throw IllegalArgumentException()
-            return KtToTsConfiguration(
+            return Kt2TsConfiguration(
                 clientDirectory = destination,
-                srcDirectory = destination.resolve(options["ktToTs:srcDirectory"] ?: "src"),
-                generatedDirectory = options["ktToTs:generatedDirectory"] ?: "generated",
-                dropPackage = options["ktToTs:dropPackage"] ?: "",
+                srcDirectory = destination.resolve(options["kt2Ts:srcDirectory"] ?: "src"),
+                generatedDirectory = options["kt2Ts:generatedDirectory"] ?: "generated",
+                dropPackage = options["kt2Ts:dropPackage"] ?: "",
                 mappings =
-                    options["ktToTs:mappings"]?.let {
+                    options["kt2Ts:mappings"]?.let {
                         Paths.get(it).readText().let {
                             JSONObject(it).toMap().mapValues { e -> e.value.toString() }
                         }
                     }
                         ?: emptyMap(),
                 nominalStringMappings =
-                    options["ktToTs:nominalStringMappings"]?.let { it.split("|").toSet() }
+                    options["kt2Ts:nominalStringMappings"]?.let { it.split("|").toSet() }
                         ?: emptySet(),
-                nominalStringImport = options["ktToTs:nominalStringImport"],
+                nominalStringImport = options["kt2Ts:nominalStringImport"],
                 // TODO[tmpl]
                 interfaceAsTypes = emptySet(),
                 // TODO use instead of temp dir ?
-                debugFile = options["ktToTs:debugFile"]?.let { Paths.get(it).toFile() })
+                debugFile = options["kt2Ts:debugFile"]?.let { Paths.get(it).toFile() })
         }
     }
 }
