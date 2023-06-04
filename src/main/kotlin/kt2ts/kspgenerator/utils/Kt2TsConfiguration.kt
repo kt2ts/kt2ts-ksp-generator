@@ -42,15 +42,15 @@ data class Kt2TsConfiguration(
                 generatedDirectory = options["kt2ts:generatedDirectory"] ?: "generated",
                 dropPackage = options["kt2ts:dropPackage"] ?: "",
                 mappings =
-                    options["kt2ts:mappings"]?.let {
-                        Paths.get(it).readText().let {
-                            JSONObject(it).toMap().mapValues { e -> e.value.toString() }
-                        }
+                options["kt2ts:mappings"]?.let {
+                    Paths.get(it).readText().let {
+                        JSONObject(it).toMap().mapValues { e -> e.value.toString() }
                     }
-                        ?: emptyMap(),
+                }
+                    ?: emptyMap(),
                 nominalStringMappings =
-                    options["kt2ts:nominalStringMappings"]?.let { it.split("|").toSet() }
-                        ?: emptySet(),
+                    options["kt2ts:nominalStringMappings"]?.split("|")?.toSet()
+                    ?: emptySet(),
                 nominalStringImport = options["kt2ts:nominalStringImport"],
                 // TODO[tmpl]
                 interfaceAsTypes = emptySet(),
