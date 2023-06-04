@@ -1,4 +1,4 @@
-package kttots.utils
+package kt2ts.kspgenerator.utils
 
 import java.io.File
 import java.nio.file.Path

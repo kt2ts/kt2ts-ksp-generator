@@ -1,9 +1,9 @@
-package kttots.utils
+package kt2ts.kspgenerator.utils
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Nullability
-import kttots.utils.ClassWriter.propertyClassName
+import kt2ts.kspgenerator.utils.ClassWriter.propertyClassName
 
 object ClassMapper {
 

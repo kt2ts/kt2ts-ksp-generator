@@ -1,4 +1,4 @@
-package kttots.utils
+package kt2ts.kspgenerator.utils
 
 import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration

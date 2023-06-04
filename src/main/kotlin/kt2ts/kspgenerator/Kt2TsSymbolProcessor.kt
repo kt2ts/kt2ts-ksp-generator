@@ -1,4 +1,4 @@
-package kttots
+package kt2ts.kspgenerator
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
@@ -13,15 +13,16 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
-import kttots.utils.ClassMapper
-import kttots.utils.ClassParser
-import kttots.utils.ClassWriter
-import kttots.utils.Debug
-import kttots.utils.ImportWriter.kotlinToTsFile
-import kttots.utils.ImportWriter.relativePath
-import kttots.utils.KtToTsConfiguration
-import kttots.utils.ShellRunner
-import kttots.utils.prettyPrint
+import kttots.GenerateTypescript
+import kt2ts.kspgenerator.utils.ClassMapper
+import kt2ts.kspgenerator.utils.ClassParser
+import kt2ts.kspgenerator.utils.ClassWriter
+import kt2ts.kspgenerator.utils.Debug
+import kt2ts.kspgenerator.utils.ImportWriter.kotlinToTsFile
+import kt2ts.kspgenerator.utils.ImportWriter.relativePath
+import kt2ts.kspgenerator.utils.KtToTsConfiguration
+import kt2ts.kspgenerator.utils.ShellRunner
+import kt2ts.kspgenerator.utils.prettyPrint
 
 // TODO[tmpl] use exceptions and catch them for debug report ?
 // TODO[tmpl] clean !!
@@ -39,7 +40,7 @@ fun debug(t: String) {
         StandardOpenOption.APPEND)
 }
 
-class KtToTsSymbolProcessor(
+class Kt2TsSymbolProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
     val options: Map<String, String>

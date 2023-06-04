@@ -1,4 +1,4 @@
-package kttots.utils
+package kt2ts.kspgenerator.utils
 
 import com.google.devtools.ksp.symbol.KSFile
 import kotlin.io.path.pathString

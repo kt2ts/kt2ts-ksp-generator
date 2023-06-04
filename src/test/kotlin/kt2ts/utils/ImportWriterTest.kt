@@ -1,7 +1,7 @@
 package kttots
 
-import kttots.utils.ImportWriter.relativePath
-import kttots.utils.KtToTsConfiguration
+import kt2ts.kspgenerator.utils.ImportWriter.relativePath
+import kt2ts.kspgenerator.utils.KtToTsConfiguration
 import java.nio.file.Paths
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
