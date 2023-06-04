@@ -29,15 +29,16 @@ object ClassWriter {
                     // TODO[tmpl] filtering on properties existence should be done at initial
                     // selection => or not for sealed
                     val properties =
-                        d.declarations.mapNotNull { it as? KSPropertyDeclaration }.toList()
+                        d.declarations.filterIsInstance<KSPropertyDeclaration>().toList()
                     if (properties.isNotEmpty() || parentIsSealedClass) {
                         // TODO[tmpl] about class which are not data classes
                         sb.appendLine("export interface ${className(d)} {")
                         if (parentIsSealedClass) {
+                            // TODO[tmpl] depends on the jackson annotation
                             sb.appendLine("  objectType: '${className(d)}';")
                         }
                         d.declarations
-                            .mapNotNull { it as? KSPropertyDeclaration }
+                            .filterIsInstance<KSPropertyDeclaration>()
                             .forEach {
                                 val nullableMark =
                                     when (it.type.resolve().nullability) {
@@ -88,6 +89,7 @@ object ClassWriter {
                         // the moment
                         if (parentIsSealedClass) {
                             sb.appendLine("export interface ${className(d)} {")
+                            // TODO[tmpl] depends on the jackson annotation
                             sb.appendLine("  objectType: '${className(d)}';")
                             sb.appendLine("}")
                             sb.appendLine("")
