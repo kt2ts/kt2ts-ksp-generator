@@ -37,20 +37,12 @@ import kt2ts.kspgenerator.utils.prettyPrint
 // TODO[tmpl] problem if an objectType in CommandResponse... should be smarter
 // support Jackson annotations
 
-fun debug(t: String) {
-    Files.write(
-        Paths.get("/Users/mlo/git/ktts-webapp-sample/debug.txt"),
-        (t + "\n").toByteArray(Charsets.UTF_8),
-        StandardOpenOption.APPEND)
-}
-
 class Kt2TsSymbolProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
     val options: Map<String, String>
 ) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        debug("go")
         val startTime = System.currentTimeMillis()
         val symbols =
             resolver
@@ -70,7 +62,6 @@ class Kt2TsSymbolProcessor(
             return
         }
         val configuration = Kt2TsConfiguration.init(options)
-        debug(configuration.prettyPrint())
         val debugReport = if (configuration.debugFile != null) StringBuilder() else null
         debugReport?.appendLine("<html><body><pre>")
         debugReport?.appendLine("Start generation ${LocalDateTime.now()}")
