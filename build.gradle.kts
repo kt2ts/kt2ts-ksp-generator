@@ -21,7 +21,7 @@ sourceSets.main {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "kt2ts"
+            groupId = "io.github.kt2ts"
             artifactId = "kt2ts-ksp-generator"
             version = "0.0.1"
 
@@ -33,7 +33,7 @@ publishing {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation("kt2ts:kt2ts-annotation:1.0.0")
+    implementation("io.github.kt2ts:kt2ts-annotation:1.0.0")
 
     implementation("com.google.devtools.ksp:symbol-processing-api:1.8.21-1.0.11")
     implementation("org.json:json:20230227")
