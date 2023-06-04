@@ -5,6 +5,7 @@ import kotlin.io.path.pathString
 
 object ImportWriter {
 
+    // TODO name
     fun kotlinToTsFile(ksFile: KSFile, conf: Kt2TsConfiguration): String {
         val dir =
             ksFile.packageName
