@@ -6,6 +6,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 import java.nio.file.Files
@@ -13,6 +14,9 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
+import kotlin.io.path.pathString
 import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
 import kt2ts.kspgenerator.utils.ClassParser
@@ -52,18 +56,19 @@ class Kt2TsSymbolProcessor(
             resolver
                 .getSymbolsWithAnnotation(GenerateTypescript::class.java.name)
                 .filterIsInstance<KSClassDeclaration>()
-        // TODO remove
-        val configuration = Kt2TsConfiguration.init(options)
-        debug(configuration.prettyPrint())
-        debug(symbols.toList().map { it.containingFile?.fileName }.toString())
-        // TODO[tmpl] what happens if no file ?
-        if (!symbols.iterator().hasNext()) return emptyList()
-        processFiles(symbols, startTime)
+        processSymbols(symbols.toList(), resolver.getAllFiles().toList(), startTime)
         val unableToProcess = symbols.filterNot { it.validate() }.toList()
         return unableToProcess
     }
 
-    fun processFiles(symbols: Sequence<KSClassDeclaration>, startTime: Long) {
+    fun processSymbols(
+        symbols: List<KSClassDeclaration>,
+        modifiedFiles: List<KSFile>,
+        startTime: Long
+    ) {
+        if (symbols.isEmpty()) {
+            return
+        }
         val configuration = Kt2TsConfiguration.init(options)
         debug(configuration.prettyPrint())
         val debugReport = if (configuration.debugFile != null) StringBuilder() else null
@@ -82,9 +87,12 @@ class Kt2TsSymbolProcessor(
         //                declaration.accept(visitor, acc)
         //            }
         val parsingResult =
-            symbols.fold(emptySet<ClassParser.Parsed>()) { acc, declaration ->
-                ClassParser.parse(declaration.asStarProjectedType(), acc, configuration.mappings)
-            }
+            symbols
+                .fold(emptySet<ClassParser.Parsed>()) { acc, declaration ->
+                    ClassParser.parse(
+                        declaration.asStarProjectedType(), acc, configuration.mappings)
+                }
+                .filter { it.file in modifiedFiles }
         debugReport?.apply {
             appendLine("<h1>Class list (${parsingResult.size} items)</h1>")
             parsingResult.forEach { appendLine(it.type.declaration.simpleName.asString()) }
@@ -102,7 +110,7 @@ class Kt2TsSymbolProcessor(
             appendLine("<h1>Temp dir </h1>")
             appendLine("${tempDir.absolutePathString()}")
         }
-        val resultFiles =
+        val result =
             filesSelection
                 .map { ksFile ->
                     val fileDeclarations =
@@ -186,10 +194,11 @@ class Kt2TsSymbolProcessor(
         // debugReport.appendLine("${it.qualifiedName?.asString()}")
         // }
         //        }
-        resultFiles.forEach {
+        result.forEach {
+            // works if packages are ok
             val destination =
                 configuration.srcDirectory.resolve(kotlinToTsFile(it.first, configuration))
-            destination.parent.toFile().mkdirs()
+            destination.parent.createDirectories()
             // TODO[fmk] format before writing file to avoid triggering webpack hot reload, useless
             // temporary diffs...
             ShellRunner.run(
@@ -205,7 +214,36 @@ class Kt2TsSymbolProcessor(
                 it.second.absolutePathString(),
                 destination.absolutePathString())
         }
-        //        tempDir.toFile().deleteRecursively()
+        // Delete generated files which does not exist anymore in Kotlin
+        // TODO shoul not be here ! if no modif for kotlin compiler, we must do this check
+        // => we won't be able to with no modifiedFile =s
+        configuration.srcDirectory.resolve(configuration.generatedDirectory).let {
+            debugReport?.appendLine("<h1>Removed files</h1>")
+            val kotlinSrc =
+                Paths.get(
+                    modifiedFiles.first().let {
+                        it.filePath
+                            .dropLastWhile { it != '/' }
+                            .dropLast(it.packageName.asString().length + 1)
+                    })
+            it.toFile().walk().forEach {
+                if (it.extension == "ts") {
+                    val relativeFilePath =
+                        it.absolutePath.let {
+                            it.drop(configuration.srcDirectory.pathString.length + 1)
+                                .drop(configuration.generatedDirectory.length + 1)
+                        }
+                    val kotlinFilePath =
+                        kotlinSrc
+                            .resolve(configuration.dropPackage.replace(".", "/"))
+                            .resolve(relativeFilePath.dropLastWhile { it != '.' } + "kt")
+                    if (!kotlinFilePath.exists()) {
+                        debugReport?.appendLine(it.absolutePath)
+                        it.delete()
+                    }
+                }
+            }
+        }
         debugReport?.appendLine("<h1>Report</h1>")
         debugReport?.appendLine("Finished generation ${LocalDateTime.now()}")
         debugReport?.appendLine("Took ${System.currentTimeMillis() - startTime}ms")
