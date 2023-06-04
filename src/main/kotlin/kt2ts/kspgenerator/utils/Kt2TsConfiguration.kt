@@ -6,7 +6,8 @@ import java.nio.file.Paths
 import kotlin.io.path.readText
 import org.json.JSONObject
 
-// TODO[tmpl] final command for prettier
+// TODO[tmpl] the whole conf as a json
+// TODO[tmpl] optional prettier executable in conf, instead of clientDirectory
 data class Kt2TsConfiguration(
     val clientDirectory: Path,
     val srcDirectory: Path,
