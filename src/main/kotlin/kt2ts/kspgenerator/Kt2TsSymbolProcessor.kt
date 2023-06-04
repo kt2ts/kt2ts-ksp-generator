@@ -35,7 +35,6 @@ import kt2ts.kspgenerator.utils.prettyPrint
 // TODO[tmpl] see ExtensionContainer to extend the plugin
 // TODO[tmpl] problem if an objectType in CommandResponse... should be smarter
 // support Jackson annotations
-
 class Kt2TsSymbolProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
