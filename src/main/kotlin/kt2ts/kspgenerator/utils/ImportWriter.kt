@@ -46,7 +46,6 @@ object ImportWriter {
                 } else f
             return start + removeExtension(target)
         } catch (e: Exception) {
-            Debug.add("=> KO")
             return ""
         }
     }
