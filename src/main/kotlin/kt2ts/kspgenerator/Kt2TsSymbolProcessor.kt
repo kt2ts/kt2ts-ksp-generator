@@ -20,7 +20,6 @@ import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
 import kt2ts.kspgenerator.utils.ClassParser
 import kt2ts.kspgenerator.utils.ClassWriter
-import kt2ts.kspgenerator.utils.Debug
 import kt2ts.kspgenerator.utils.ImportWriter.kotlinToTsFile
 import kt2ts.kspgenerator.utils.ImportWriter.relativePath
 import kt2ts.kspgenerator.utils.Kt2TsConfiguration
@@ -242,8 +241,6 @@ class Kt2TsSymbolProcessor(
         debugReport?.appendLine("<h1>Report</h1>")
         debugReport?.appendLine("Finished generation ${LocalDateTime.now()}")
         debugReport?.appendLine("Took ${System.currentTimeMillis() - startTime}ms")
-        debugReport?.appendLine("<h1>Debug autre</h1>")
-        debugReport?.appendLine(Debug.sb.toString())
         debugReport?.appendLine("</pre></body></html>")
         debugReport?.let {
             if (configuration.debugFile == null) {
