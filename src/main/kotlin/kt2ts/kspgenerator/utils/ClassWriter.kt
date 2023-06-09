@@ -55,8 +55,7 @@ object ClassWriter {
                         val subTypes = d.getSealedSubclasses().toList()
                         //                                .filter {
                         //                                it.declarations
-                        //                                    .mapNotNull { it as?
-                        // KSPropertyDeclaration }
+                        //                                    .filterIsInstance<KSPropertyDeclaration>()
                         //                                    .toList()
                         //                                    .isNotEmpty()
                         //                            }
