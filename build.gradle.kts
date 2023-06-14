@@ -18,6 +18,14 @@ sourceSets.main {
     java.srcDirs("src/main/kotlin")
 }
 
+java {
+    /*
+     * Setup JDK and will also set target with Kotlin projects.
+     * https://docs.gradle.org/current/userguide/toolchains.html
+     */
+    toolchain { languageVersion.set(JavaLanguageVersion.of(17)) }
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
