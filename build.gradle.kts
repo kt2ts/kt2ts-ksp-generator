@@ -11,7 +11,13 @@ buildscript {
 
 repositories {
     mavenCentral()
-    mavenLocal()
+    maven {
+        url = uri("https://maven.pkg.github.com/kt2ts/kt2ts-annotation")
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 sourceSets.main {
