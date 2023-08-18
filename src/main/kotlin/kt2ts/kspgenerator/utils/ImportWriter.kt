@@ -5,6 +5,8 @@ import kotlin.io.path.pathString
 
 object ImportWriter {
 
+    val generatedFileExtention  = "generated.ts"
+
     // TODO name
     fun kotlinToTsFile(ksFile: KSFile, conf: Kt2TsConfiguration): String {
         val dir =
@@ -16,7 +18,7 @@ object ImportWriter {
                 .replace(".", "/")
                 .removePrefix("/")
         val file = ksFile.fileName.removeSuffix(".kt")
-        return "${conf.generatedDirectory}/$dir/$file.ts"
+        return "${conf.generatedDirectory}/$dir/$file.$generatedFileExtention"
     }
 
     // TODO this is hell, please refactor

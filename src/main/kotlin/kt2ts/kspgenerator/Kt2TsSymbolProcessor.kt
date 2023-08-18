@@ -20,6 +20,7 @@ import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
 import kt2ts.kspgenerator.utils.ClassParser
 import kt2ts.kspgenerator.utils.ClassWriter
+import kt2ts.kspgenerator.utils.ImportWriter.generatedFileExtention
 import kt2ts.kspgenerator.utils.ImportWriter.kotlinToTsFile
 import kt2ts.kspgenerator.utils.ImportWriter.relativePath
 import kt2ts.kspgenerator.utils.Kt2TsConfiguration
@@ -221,7 +222,7 @@ class Kt2TsSymbolProcessor(
                             .dropLast(it.packageName.asString().length + 1)
                     })
             it.toFile().walk().forEach {
-                if (it.extension == "ts") {
+                if (it.extension == generatedFileExtention) {
                     val relativeFilePath =
                         it.absolutePath.let {
                             it.drop(configuration.srcDirectory.pathString.length + 1)
