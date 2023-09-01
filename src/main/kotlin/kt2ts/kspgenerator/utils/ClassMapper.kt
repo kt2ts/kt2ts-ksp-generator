@@ -51,12 +51,17 @@ object ClassMapper {
         }
     }
 
-    fun mapClass(d: KSClassDeclaration, nominalStringMappings:Set<String>): ClassMapping? {
+    fun mapClass(
+        d: KSClassDeclaration,
+        nominalStringMappings: Set<String>,
+        nominalStringImport: String?
+    ): ClassMapping? {
         val ancestry = recursiveAncestry(d).mapNotNull { it.qualifiedName?.asString() }
         nominalStringMappings.forEach {
             if (it in ancestry) {
                 return ClassMapping(
-                    "NominalString<'${d.simpleName.asString()}'>", "utils/nominal-class")
+                    "NominalString<'${d.simpleName.asString()}'>",
+                    nominalStringImport ?: "utils/nominal-class")
             }
         }
         return null

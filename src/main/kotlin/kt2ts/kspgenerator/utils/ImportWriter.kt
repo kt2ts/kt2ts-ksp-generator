@@ -5,7 +5,7 @@ import kotlin.io.path.pathString
 
 object ImportWriter {
 
-    val generatedFileExtention  = "generated.ts"
+    val generatedFileExtention = "generated.ts"
 
     // TODO name
     fun kotlinToTsFile(ksFile: KSFile, conf: Kt2TsConfiguration): String {
@@ -14,7 +14,7 @@ object ImportWriter {
                 .asString()
                 .replace(conf.dropPackage, "")
                 // TODO what ??
-//                .replace("..", ".")
+                //                .replace("..", ".")
                 .replace(".", "/")
                 .removePrefix("/")
         val file = ksFile.fileName.removeSuffix(".kt")
@@ -23,6 +23,11 @@ object ImportWriter {
 
     // TODO this is hell, please refactor
     fun relativePath(filePath: String, originPath: String, conf: Kt2TsConfiguration): String {
+        // TODO how do we make a difference between a lib and a path ??
+        if (filePath.first() == '@') {
+            // we consider it's a lib path
+            return filePath
+        }
         val f = cleanPath(filePath, conf)
         val o = cleanPath(originPath, conf)
         try {

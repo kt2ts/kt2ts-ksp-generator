@@ -10,9 +10,9 @@ import com.google.devtools.ksp.symbol.Nullability
 object ClassWriter {
 
     // TODO[tmpl] about support of Jackson annotations ? field @Ignore
-    fun toTs(parsed: ClassParser.Parsed, mappings: Map<String, String>, nominalStringMappings:Set<String>): StringBuilder {
+    fun toTs(parsed: ClassParser.Parsed, mappings: Map<String, String>, nominalStringMappings:Set<String>, nominalStringImport:String?): StringBuilder {
         val d = parsed.type.declaration as? KSClassDeclaration ?: throw IllegalArgumentException()
-        val mapping = ClassMapper.mapClass(d, nominalStringMappings)
+        val mapping = ClassMapper.mapClass(d, nominalStringMappings, nominalStringImport)
         val sb = StringBuilder()
         val parentIsSealedClass = let {
             val parentSealedSubClasses =

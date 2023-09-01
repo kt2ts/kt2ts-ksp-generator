@@ -143,7 +143,10 @@ class Kt2TsSymbolProcessor(
                             parsed
                                 .mapNotNull { it.type.declaration as? KSClassDeclaration }
                                 .mapNotNull {
-                                    ClassMapper.mapClass(it, configuration.nominalStringMappings)
+                                    ClassMapper.mapClass(
+                                        it,
+                                        configuration.nominalStringMappings,
+                                        configuration.nominalStringImport)
                                 }
                         dependenciesImportsMapped + dependenciesImports + classImports
                     }
@@ -179,7 +182,10 @@ class Kt2TsSymbolProcessor(
                     parsed.forEach {
                         sb.append(
                             ClassWriter.toTs(
-                                it, configuration.mappings, configuration.nominalStringMappings))
+                                it,
+                                configuration.mappings,
+                                configuration.nominalStringMappings,
+                                configuration.nominalStringImport))
                     }
                     Files.write(file, sb.toString().toByteArray())
                     ksFile to file
