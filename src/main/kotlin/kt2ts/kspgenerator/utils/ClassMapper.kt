@@ -47,6 +47,7 @@ object ClassMapper {
             // can specify an annotation ? which could be checked at serialization/deser
             // OR always loose, easier not to type it
             Map::class.qualifiedName -> ClassMapping("{}")
+            Any::class.qualifiedName -> ClassMapping("any")
             else -> null
         }
     }
