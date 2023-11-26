@@ -97,7 +97,7 @@ class Kt2TsSymbolProcessor(
         val tempDir = Files.createTempDirectory("kt2ts-")
         debugReport?.apply {
             appendLine("<h1>Temp dir </h1>")
-            appendLine("${tempDir.absolutePathString()}")
+            appendLine(tempDir.absolutePathString())
         }
         val result =
             filesSelection
