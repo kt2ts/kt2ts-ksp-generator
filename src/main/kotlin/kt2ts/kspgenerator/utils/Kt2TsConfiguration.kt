@@ -30,6 +30,8 @@ data class Kt2TsConfiguration(
     val nominalStringImport: String?,
     // interfaces i want as type = all subtypes
     val interfaceAsTypes: Set<String>,
+    val absoluteImport: Boolean,
+    val absoluteImportPrefix: String?,
     val debugFile: File?
 ) {
     companion object {
@@ -43,19 +45,19 @@ data class Kt2TsConfiguration(
                 generatedDirectory = options["kt2ts:generatedDirectory"] ?: "generated",
                 dropPackage = options["kt2ts:dropPackage"] ?: "",
                 mappings =
-                options["kt2ts:mappings"]?.let {
-                    Paths.get(it).readText().let {
-                        JSONObject(it).toMap().mapValues { e -> e.value.toString() }
-                    }
-                }
-                    ?: emptyMap(),
+                    options["kt2ts:mappings"]?.let {
+                        Paths.get(it).readText().let {
+                            JSONObject(it).toMap().mapValues { e -> e.value.toString() }
+                        }
+                    } ?: emptyMap(),
                 nominalStringMappings =
-                    options["kt2ts:nominalStringMappings"]?.split("|")?.toSet()
-                    ?: emptySet(),
+                    options["kt2ts:nominalStringMappings"]?.split("|")?.toSet() ?: emptySet(),
                 nominalStringImport = options["kt2ts:nominalStringImport"],
                 // TODO[tmpl]
                 interfaceAsTypes = emptySet(),
                 // TODO use instead of temp dir ?
+                absoluteImport = options["kt2ts:absoluteImport"] == "true",
+                absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() })
         }
     }

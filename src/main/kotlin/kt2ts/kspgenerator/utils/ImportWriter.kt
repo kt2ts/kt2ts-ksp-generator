@@ -21,6 +21,21 @@ object ImportWriter {
         return "${conf.generatedDirectory}/$dir/$file.$generatedFileExtention"
     }
 
+    fun absolutePath(filePath: String, conf: Kt2TsConfiguration): String {
+        if (filePath.first() == '@') {
+            // we consider it's a lib path
+            return filePath
+        }
+        val f = removeExtension(cleanPath(filePath, conf))
+        return (conf.absoluteImportPrefix?.let {
+            if (it != "" && !it.endsWith("/")) {
+                "$it/"
+            } else {
+                it
+            }
+        } ?: "") + f
+    }
+
     // TODO this is hell, please refactor
     fun relativePath(filePath: String, originPath: String, conf: Kt2TsConfiguration): String {
         // TODO how do we make a difference between a lib and a path ??

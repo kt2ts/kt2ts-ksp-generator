@@ -20,6 +20,7 @@ import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
 import kt2ts.kspgenerator.utils.ClassParser
 import kt2ts.kspgenerator.utils.ClassWriter
+import kt2ts.kspgenerator.utils.ImportWriter.absolutePath
 import kt2ts.kspgenerator.utils.ImportWriter.generatedFileExtention
 import kt2ts.kspgenerator.utils.ImportWriter.kotlinToTsFile
 import kt2ts.kspgenerator.utils.ImportWriter.relativePath
@@ -172,7 +173,12 @@ class Kt2TsSymbolProcessor(
                                     .distinct()
                                     .sorted()
                                     .joinToString(separator = ", ")
-                            val from = relativePath(file, tsFile, configuration)
+                            val from =
+                                if (configuration.absoluteImport) {
+                                    absolutePath(file, configuration)
+                                } else {
+                                    relativePath(file, tsFile, configuration)
+                                }
                             sb.appendLine("import { $i } from '$from';")
                         }
                     sb.appendLine("")

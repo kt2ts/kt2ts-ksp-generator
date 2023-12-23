@@ -1,7 +1,7 @@
 package kt2ts.kspgenerator.utils
 
-import kt2ts.kspgenerator.utils.ImportWriter.relativePath
 import java.nio.file.Paths
+import kt2ts.kspgenerator.utils.ImportWriter.relativePath
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -17,6 +17,8 @@ internal class ImportWriterTest {
             emptySet(),
             null,
             emptySet(),
+            false,
+            null,
             null)
 
     @Test
