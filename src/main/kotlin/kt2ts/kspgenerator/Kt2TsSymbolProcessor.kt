@@ -195,25 +195,31 @@ class Kt2TsSymbolProcessor(
         // debugReport.appendLine("${it.qualifiedName?.asString()}")
         // }
         //        }
-        result.forEach {
+        result.forEach { (ksFile, path) ->
             // works if packages are ok
             val destination =
-                configuration.srcDirectory.resolve(kotlinToTsFile(it.first, configuration))
+                configuration.srcDirectory.resolve(kotlinToTsFile(ksFile, configuration))
             destination.parent.createDirectories()
             // TODO[fmk] format before writing file to avoid triggering webpack hot reload, useless
             // temporary diffs...
-            ShellRunner.run(
-                configuration.clientDirectory,
-                "node",
-                "node_modules/prettier/bin-prettier.js",
-                "--config",
-                "package.json",
-                "--write",
-                it.second.absolutePathString(),
-                "&&",
-                "mv",
-                it.second.absolutePathString(),
-                destination.absolutePathString())
+            // TODO a plugin option to fail kotlin build in this case
+            val format =
+                ShellRunner.run(
+                    configuration.clientDirectory,
+                    "node",
+                    "node_modules/prettier/bin-prettier.js",
+                    "--config",
+                    "package.json",
+                    "--write",
+                    path.absolutePathString())
+            if (format.result != 0) {
+                Files.write(
+                    path,
+                    ("// [WARN] could not format files, is node_modules installed ?\n" +
+                            Files.readString(path))
+                        .toByteArray(Charsets.UTF_8))
+            }
+            ShellRunner.run("mv", path.absolutePathString(), destination.absolutePathString())
         }
         // Delete generated files which does not exist anymore in Kotlin
         // TODO shoul not be here ! if no modif for kotlin compiler, we must do this check
