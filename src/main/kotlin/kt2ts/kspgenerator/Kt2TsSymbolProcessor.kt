@@ -209,16 +209,27 @@ class Kt2TsSymbolProcessor(
             // TODO[fmk] format before writing file to avoid triggering webpack hot reload, useless
             // temporary diffs...
             // TODO a plugin option to fail kotlin build in this case
-            val format =
-                ShellRunner.run(
-                    configuration.clientDirectory,
-                    "node",
-                    "node_modules/prettier/bin-prettier.js",
-                    "--config",
-                    "package.json",
-                    "--write",
-                    path.absolutePathString())
-            if (format.result != 0) {
+            val formatted =
+                listOf(
+                        // prettier 2
+                        "node_modules/prettier/bin-prettier.js",
+                        // prettier 3
+                        "node_modules/prettier/bin/prettier.cjs",
+                    )
+                    .filter { configuration.clientDirectory.resolve(it).exists() }
+                    .firstOrNull()
+                    ?.let { prettier ->
+                        ShellRunner.run(
+                                configuration.clientDirectory,
+                                "node",
+                                prettier,
+                                "--config",
+                                "package.json",
+                                "--write",
+                                path.absolutePathString())
+                            .result == 0
+                    } ?: false
+            if (!formatted) {
                 Files.write(
                     path,
                     ("// [WARN] could not format files, is node_modules installed ?\n" +
