@@ -30,6 +30,7 @@ data class Kt2TsConfiguration(
     val nominalStringImport: String?,
     // interfaces i want as type = all subtypes
     val interfaceAsTypes: Set<String>,
+    val formatCommand: String?,
     val absoluteImport: Boolean,
     val absoluteImportPrefix: String?,
     val debugFile: File?
@@ -57,6 +58,7 @@ data class Kt2TsConfiguration(
                 interfaceAsTypes = emptySet(),
                 // TODO use instead of temp dir ?
                 absoluteImport = options["kt2ts:absoluteImport"] == "true",
+                formatCommand = options["kt2ts:formatCommand"],
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() })
         }
