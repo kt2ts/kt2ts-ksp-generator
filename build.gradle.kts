@@ -11,13 +11,7 @@ buildscript {
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://maven.pkg.github.com/kt2ts/kt2ts-annotation")
-        credentials {
-            username = System.getenv("GITHUB_ACTOR")
-            password = System.getenv("GITHUB_TOKEN")
-        }
-    }
+    maven { url = uri("https://mlorber.net/maven_repo") }
 }
 
 sourceSets.main {
@@ -37,20 +31,9 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "io.github.kt2ts"
             artifactId = "kt2ts-ksp-generator"
-            version = "0.0.4"
+            version = "0.0.5"
 
             from(components["kotlin"])
-        }
-    }
-
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/kt2ts/kt2ts-ksp-generator")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
         }
     }
 }

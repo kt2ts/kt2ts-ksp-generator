@@ -7,7 +7,7 @@ import java.util.Scanner
 object ShellRunner {
 
     data class CommandResult(
-        val result: Int,
+        val exitCode: Int,
         val output: List<String>,
         val errorOutput: List<String>
     )
@@ -20,10 +20,6 @@ object ShellRunner {
     private fun doRun(directory: Path?, command: String, vararg params: String): CommandResult {
         val builder =
             ProcessBuilder().apply {
-                environment().apply {
-                    val addToPath = listOf("/usr/local/bin")
-                    put("PATH", "${get("PATH")}:${addToPath.joinToString(separator = ":")}")
-                }
                 if (directory != null) {
                     directory(directory.toFile())
                 }

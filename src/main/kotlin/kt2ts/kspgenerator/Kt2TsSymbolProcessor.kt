@@ -201,41 +201,33 @@ class Kt2TsSymbolProcessor(
         // debugReport.appendLine("${it.qualifiedName?.asString()}")
         // }
         //        }
+        debugReport?.appendLine("<h1>Format</h1>")
         result.forEach { (ksFile, path) ->
             // works if packages are ok
             val destination =
                 configuration.srcDirectory.resolve(kotlinToTsFile(ksFile, configuration))
             destination.parent.createDirectories()
+
             // TODO[fmk] format before writing file to avoid triggering webpack hot reload, useless
             // temporary diffs...
             // TODO a plugin option to fail kotlin build in this case
-            val formatted =
-                listOf(
-                        // prettier 2
-                        "node_modules/prettier/bin-prettier.js",
-                        // prettier 3
-                        "node_modules/prettier/bin/prettier.cjs",
+            // TODO a plugin option to fail kotlin build in this case
+            configuration.formatCommand?.let {
+                val formatResult =
+                    ShellRunner.run(configuration.clientDirectory, configuration.formatCommand)
+                if (formatResult.exitCode != 0) {
+                    Files.write(
+                        path,
+                        ("// [WARN] could not format files, is node_modules installed ?\n" +
+                                Files.readString(path))
+                            .toByteArray(Charsets.UTF_8)
                     )
-                    .filter { configuration.clientDirectory.resolve(it).exists() }
-                    .firstOrNull()
-                    ?.let { prettier ->
-                        ShellRunner.run(
-                                configuration.clientDirectory,
-                                "node",
-                                prettier,
-                                "--config",
-                                "package.json",
-                                "--write",
-                                path.absolutePathString())
-                            .result == 0
-                    } ?: false
-            if (!formatted) {
-                Files.write(
-                    path,
-                    ("// [WARN] could not format files, is node_modules installed ?\n" +
-                            Files.readString(path))
-                        .toByteArray(Charsets.UTF_8))
+                    debugReport?.appendLine("<pre>Failed format ${path.fileName}</pre>")
+                    debugReport?.appendLine("<pre>Output: ${formatResult.output}</pre>")
+                    debugReport?.appendLine("<pre>Error output: ${formatResult.errorOutput}</pre>")
+                }
             }
+            // file is written once at the end of the process to avoid triggering webpack hot reload serveral times
             ShellRunner.run("mv", path.absolutePathString(), destination.absolutePathString())
         }
         // Delete generated files which does not exist anymore in Kotlin

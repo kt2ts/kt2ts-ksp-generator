@@ -9,17 +9,19 @@ internal class ImportWriterTest {
 
     val testConfiguration =
         Kt2TsConfiguration(
-            Paths.get("/client"),
-            Paths.get("/client/src"),
-            "generated",
-            "com.kttswebapptemplate",
-            emptyMap(),
-            emptySet(),
-            null,
-            emptySet(),
-            false,
-            null,
-            null)
+            clientDirectory = Paths.get("/client"),
+            srcDirectory = Paths.get("/client/src"),
+            generatedDirectory = "generated",
+            dropPackage = "com.kttswebapptemplate",
+            mappings = emptyMap(),
+            nominalStringMappings = emptySet(),
+            nominalStringImport = null,
+            interfaceAsTypes = emptySet(),
+            formatCommand = null,
+            absoluteImport = false,
+            absoluteImportPrefix = null,
+            debugFile = null
+        )
 
     @Test
     fun `check relative path in same path`() {
