@@ -202,6 +202,15 @@ class Kt2TsSymbolProcessor(
         // }
         //        }
         debugReport?.appendLine("<h1>Format</h1>")
+        if (configuration.prettierBinary != null &&
+            !configuration.clientDirectory.resolve(configuration.prettierBinary).exists() &&
+            configuration.prettierDependencyInstall != null
+        ) {
+            ShellRunner.run(
+                configuration.clientDirectory,
+                configuration.prettierDependencyInstall
+            )
+        }
         result.forEach { (ksFile, path) ->
             // works if packages are ok
             val destination =
@@ -212,9 +221,17 @@ class Kt2TsSymbolProcessor(
             // temporary diffs...
             // TODO a plugin option to fail kotlin build in this case
             // TODO a plugin option to fail kotlin build in this case
-            configuration.formatCommand?.let {
+            configuration.prettierBinary?.let {
                 val formatResult =
-                    ShellRunner.run(configuration.clientDirectory, configuration.formatCommand)
+                    ShellRunner.run(
+                        configuration.clientDirectory,
+                        "node",
+                        configuration.prettierBinary,
+                        "--config",
+                        "package.json",
+                        "--write",
+                        path.absolutePathString()
+                    )
                 if (formatResult.exitCode != 0) {
                     Files.write(
                         path,

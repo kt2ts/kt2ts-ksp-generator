@@ -17,7 +17,8 @@ internal class ImportWriterTest {
             nominalStringMappings = emptySet(),
             nominalStringImport = null,
             interfaceAsTypes = emptySet(),
-            formatCommand = null,
+            prettierDependencyInstall = null,
+            prettierBinary = null,
             absoluteImport = false,
             absoluteImportPrefix = null,
             debugFile = null
