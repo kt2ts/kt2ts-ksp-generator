@@ -18,6 +18,7 @@ object ClassMapper {
         }
         return when (qualifiedName) {
             Boolean::class.qualifiedName -> ClassMapping("boolean")
+            Double::class.qualifiedName -> ClassMapping("number")
             Int::class.qualifiedName -> ClassMapping("number")
             Long::class.qualifiedName -> ClassMapping("number")
             String::class.qualifiedName -> ClassMapping("string")
