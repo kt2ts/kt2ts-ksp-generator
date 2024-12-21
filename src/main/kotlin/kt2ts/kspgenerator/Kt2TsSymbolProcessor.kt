@@ -27,6 +27,7 @@ import kt2ts.kspgenerator.utils.ImportWriter.relativePath
 import kt2ts.kspgenerator.utils.Kt2TsConfiguration
 import kt2ts.kspgenerator.utils.ShellRunner
 import kt2ts.kspgenerator.utils.prettyPrint
+import kotlin.io.path.notExists
 
 // TODO[tmpl] use exceptions and catch them for debug report ?
 // TODO[tmpl] clean !!
@@ -203,7 +204,7 @@ class Kt2TsSymbolProcessor(
         //        }
         debugReport?.appendLine("<h1>Format</h1>")
         if (configuration.prettierBinary != null &&
-            !configuration.clientDirectory.resolve(configuration.prettierBinary).exists() &&
+            configuration.clientDirectory.resolve(configuration.prettierBinary).notExists() &&
             configuration.prettierDependencyInstall != null
         ) {
             ShellRunner.run(
