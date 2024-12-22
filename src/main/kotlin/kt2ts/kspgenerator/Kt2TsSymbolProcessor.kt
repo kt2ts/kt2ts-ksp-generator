@@ -18,6 +18,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.pathString
 import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
+import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 import kt2ts.kspgenerator.utils.ClassParser
 import kt2ts.kspgenerator.utils.ClassWriter
 import kt2ts.kspgenerator.utils.ImportWriter.absolutePath
@@ -56,7 +57,7 @@ class Kt2TsSymbolProcessor(
     fun processSymbols(
         symbols: List<KSClassDeclaration>,
         modifiedFiles: List<KSFile>,
-        startTime: Long
+        startTime: Long,
     ) {
         if (symbols.isEmpty()) {
             return
@@ -77,11 +78,18 @@ class Kt2TsSymbolProcessor(
         //            symbols.fold(emptySet<ClassParser.Parsed>()) { acc, declaration ->
         //                declaration.accept(visitor, acc)
         //            }
+        val mapClassMapping = let {
+            if (configuration.mapClass != null && configuration.mapClassFile != null) {
+                ClassMapping(configuration.mapClass, configuration.mapClassFile)
+            } else {
+                null
+            }
+        }
         val parsingResult =
             symbols
                 .fold(emptySet<ClassParser.Parsed>()) { acc, declaration ->
                     ClassParser.parse(
-                        declaration.asStarProjectedType(), acc, configuration.mappings)
+                        declaration.asStarProjectedType(), acc, configuration.mappings, mapClassMapping)
                 }
                 .filter { it.file in modifiedFiles }
         debugReport?.apply {
@@ -126,7 +134,7 @@ class Kt2TsSymbolProcessor(
                                     .declarations
                                     .filterIsInstance<KSPropertyDeclaration>()
                                     .mapNotNull {
-                                        ClassMapper.mapProperty(it.type, configuration.mappings)
+                                        ClassMapper.mapProperty(it.type, configuration.mappings, mapClassMapping)
                                     }
                             }
                         val dependenciesImports =
@@ -192,7 +200,8 @@ class Kt2TsSymbolProcessor(
                                 it,
                                 configuration.mappings,
                                 configuration.nominalStringMappings,
-                                configuration.nominalStringImport))
+                                configuration.nominalStringImport,
+                                mapClassMapping))
                     }
                     Files.write(file, sb.toString().toByteArray())
                     ksFile to file

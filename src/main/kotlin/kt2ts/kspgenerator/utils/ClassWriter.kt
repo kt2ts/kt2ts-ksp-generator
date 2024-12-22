@@ -11,7 +11,11 @@ import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 object ClassWriter {
 
     // TODO[tmpl] about support of Jackson annotations ? field @Ignore
-    fun toTs(parsed: ClassParser.Parsed, mappings: Map<String, String>, nominalStringMappings:Set<String>, nominalStringImport:String?): StringBuilder {
+    fun toTs(parsed: ClassParser.Parsed,
+             mappings: Map<String, String>,
+             nominalStringMappings: Set<String>,
+             nominalStringImport: String?,
+             mapClassMapping: ClassMapping?): StringBuilder {
         val d = parsed.type.declaration as? KSClassDeclaration ?: throw IllegalArgumentException()
         val mapping = ClassMapper.mapClass(d, nominalStringMappings, nominalStringImport)
         val sb = StringBuilder()
@@ -48,7 +52,7 @@ object ClassWriter {
                                         Nullability.PLATFORM -> ""
                                     }
                                 sb.appendLine(
-                                    "  ${it.simpleName.asString()}$nullableMark: ${propertyClassMap(it.type, mappings).name};")
+                                    "  ${it.simpleName.asString()}$nullableMark: ${propertyClassMap(it.type, mappings, mapClassMapping).name};")
                             }
                         sb.appendLine("}")
                         sb.appendLine("")
@@ -112,13 +116,20 @@ object ClassWriter {
         return prefix + d.simpleName.asString()
     }
 
-    fun propertyClassMap(t: KSTypeReference, mappings: Map<String, String>): ClassMapping =
-        ClassMapper.mapProperty(t, mappings)
+    fun propertyClassMap(
+        t: KSTypeReference,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?
+    ): ClassMapping =
+        ClassMapper.mapProperty(t, mappings, mapClassMapping)
             ?: ClassMapping(className(t.resolve().declaration))
 
 
-    fun nullablePropertyClassName(t: KSTypeReference, mappings: Map<String, String>) =
-        propertyClassMap(t, mappings).name.let {
+    fun nullablePropertyClassName(
+        t: KSTypeReference, mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?
+    ) =
+        propertyClassMap(t, mappings, mapClassMapping).name.let {
         when (t.resolve().nullability) {
             Nullability.NULLABLE -> "($it | null)"
             Nullability.NOT_NULL,

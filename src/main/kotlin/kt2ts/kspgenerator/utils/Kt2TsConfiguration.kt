@@ -30,6 +30,8 @@ data class Kt2TsConfiguration(
     val nominalStringImport: String?,
     // interfaces i want as type = all subtypes
     val interfaceAsTypes: Set<String>,
+    val mapClass: String?,
+    val mapClassFile: String?,
     val prettierDependencyInstall: String?,
     val prettierBinary: String?,
     val absoluteImport: Boolean,
@@ -58,9 +60,11 @@ data class Kt2TsConfiguration(
                 // TODO[tmpl]
                 interfaceAsTypes = emptySet(),
                 // TODO use instead of temp dir ?
-                absoluteImport = options["kt2ts:absoluteImport"] == "true",
+                mapClass = options["kt2ts:mapClass"],
+                mapClassFile = options["kt2ts:mapClassFile"],
                 prettierDependencyInstall = options["kt2ts:prettierDependencyInstall"],
                 prettierBinary = options["kt2ts:prettierBinary"],
+                absoluteImport = options["kt2ts:absoluteImport"] == "true",
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() })
         }

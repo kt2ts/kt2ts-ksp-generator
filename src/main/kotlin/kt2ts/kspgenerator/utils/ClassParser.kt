@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeReference
+import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 import kt2ts.kspgenerator.utils.ClassMapper.mapProperty
 
 // TODO[tmpl] name
@@ -48,7 +49,9 @@ object ClassParser {
 
     // TODO[tmpl] sealed support is very limited
     // will work if a field uses the sealed object and not directly a subclass
-    fun parse(t: KSType, data: Set<Parsed>, mappings: Map<String, String>): Set<Parsed> {
+    fun parse(t: KSType, data: Set<Parsed>,
+              mappings: Map<String, String>,
+              mapClassMapping: ClassMapping?): Set<Parsed> {
         let {
             val p = t.declaration.packageName.asString()
             val i = p.indexOf(".")
@@ -65,7 +68,7 @@ object ClassParser {
                 //                .mapNotNull { (it as?
                 // KSPropertyDeclaration)?.type?.resolve()?.declaration }
                 .filterIsInstance<KSPropertyDeclaration>()
-                .flatMap { mapDependencies(it.type, mappings) }
+                .flatMap { mapDependencies(it.type, mappings, mapClassMapping) }
                 //                .map { it.resolve() }
                 //                .filterIsInstance<KSClassDeclaration>()
                 //                .mapNotNull { mapDependency(it) }
@@ -77,13 +80,13 @@ object ClassParser {
                     // [doc] infinite loop is possible without it
                     // TODO[tmpl] test works as expected !
                     .filter { it.resolve() !in alreadySet }
-                    .fold(it) { acc, d -> parse(d.resolve(), acc, mappings) }
+                    .fold(it) { acc, d -> parse(d.resolve(), acc, mappings, mapClassMapping) }
             }
             // TODO[tmpl] a priori we should use findActuals
             .let {
                 // TODO[tmpl] infinite loop is possible ?
                 d.getSealedSubclasses().fold(it) { acc, d ->
-                    parse(d.asStarProjectedType(), acc, mappings)
+                    parse(d.asStarProjectedType(), acc, mappings, mapClassMapping)
                 }
             }
     }
@@ -112,7 +115,9 @@ object ClassParser {
     //    }
 
     // TODO[tmpl] test: generic with generic inside
-    fun mapDependencies(t: KSTypeReference, mappings: Map<String, String>): List<KSTypeReference> {
+    fun mapDependencies(t: KSTypeReference,
+                        mappings: Map<String, String>,
+                        mapClassMapping: ClassMapping?): List<KSTypeReference> {
         //        val d = t.resolve().declaration as? KSClassDeclaration
         //        val a = allAscendance(classDeclaration)
         // TODO[tmpl] this method to find ancestry is actually a very bad idea
@@ -136,11 +141,11 @@ object ClassParser {
                 ?.mapNotNull { it.type }
                 // TODO[tmpl] HERE we can fall in a infinite loop ?
                 // but DO NOT use data to filter, we need a contextual set()
-                ?.flatMap { mapDependencies(it, mappings) }
+                ?.flatMap { mapDependencies(it, mappings, mapClassMapping) }
                 ?: emptyList()
         // TODO[tmpl] actually not a good idea, take out the mapped to get them later
         val r =
-            if (mapProperty(t, mappings) == null) {
+            if (mapProperty(t, mappings, mapClassMapping) == null) {
                 listOf(t)
             } else {
                 emptyList()
