@@ -41,13 +41,13 @@ object ClassMapper {
                 val a = t.element?.typeArguments ?: throw IllegalArgumentException()
                 val t1 = a.firstOrNull()?.type ?: throw IllegalArgumentException()
                 val t2 = a.getOrNull(1)?.type ?: throw IllegalArgumentException()
-                ClassMapping("[${mapProperty(t1, mappings)},${mapProperty(t2, mappings)}]")
+                ClassMapping("[${propertyClassName(t1, mappings).name},${propertyClassName(t2, mappings).name}]")
             }
             // TODO[tmpl] Record vs Dict we have a problem
             // case by case
             // can specify an annotation ? which could be checked at serialization/deser
             // OR always loose, easier not to type it
-            Map::class.qualifiedName -> ClassMapping("{}")
+            Map::class.qualifiedName -> ClassMapping("any")
             Any::class.qualifiedName -> ClassMapping("any")
             else -> null
         }
