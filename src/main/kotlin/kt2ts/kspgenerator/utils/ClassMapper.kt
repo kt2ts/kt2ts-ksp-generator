@@ -2,8 +2,7 @@ package kt2ts.kspgenerator.utils
 
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
-import com.google.devtools.ksp.symbol.Nullability
-import kt2ts.kspgenerator.utils.ClassWriter.propertyClassName
+import kt2ts.kspgenerator.utils.ClassWriter.nullablePropertyClassName
 
 object ClassMapper {
 
@@ -27,21 +26,14 @@ object ClassMapper {
                 val t =
                     t.element?.typeArguments?.firstOrNull()?.type
                         ?: throw IllegalArgumentException()
-                val name =
-                    propertyClassName(t, mappings).name.let {
-                        when (t.resolve().nullability) {
-                            Nullability.NULLABLE -> "($it | null)"
-                            Nullability.NOT_NULL,
-                            Nullability.PLATFORM -> it
-                        }
-                    }
+                val name = nullablePropertyClassName(t, mappings)
                 ClassMapping("$name[]")
             }
             Pair::class.qualifiedName -> {
                 val a = t.element?.typeArguments ?: throw IllegalArgumentException()
                 val t1 = a.firstOrNull()?.type ?: throw IllegalArgumentException()
                 val t2 = a.getOrNull(1)?.type ?: throw IllegalArgumentException()
-                ClassMapping("[${propertyClassName(t1, mappings).name},${propertyClassName(t2, mappings).name}]")
+                ClassMapping("[${nullablePropertyClassName(t1, mappings)},${nullablePropertyClassName(t2, mappings)}]")
             }
             // TODO[tmpl] Record vs Dict we have a problem
             // case by case

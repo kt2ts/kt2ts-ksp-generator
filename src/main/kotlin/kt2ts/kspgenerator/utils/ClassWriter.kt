@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Nullability
+import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 
 object ClassWriter {
 
@@ -47,7 +48,7 @@ object ClassWriter {
                                         Nullability.PLATFORM -> ""
                                     }
                                 sb.appendLine(
-                                    "  ${it.simpleName.asString()}$nullableMark: ${propertyClassName(it.type, mappings).name};")
+                                    "  ${it.simpleName.asString()}$nullableMark: ${propertyClassMap(it.type, mappings).name};")
                             }
                         sb.appendLine("}")
                         sb.appendLine("")
@@ -111,7 +112,17 @@ object ClassWriter {
         return prefix + d.simpleName.asString()
     }
 
-    fun propertyClassName(t: KSTypeReference, mappings: Map<String, String>) =
+    fun propertyClassMap(t: KSTypeReference, mappings: Map<String, String>): ClassMapping =
         ClassMapper.mapProperty(t, mappings)
-            ?: ClassMapper.ClassMapping(className(t.resolve().declaration))
+            ?: ClassMapping(className(t.resolve().declaration))
+
+
+    fun nullablePropertyClassName(t: KSTypeReference, mappings: Map<String, String>) =
+        propertyClassMap(t, mappings).name.let {
+        when (t.resolve().nullability) {
+            Nullability.NULLABLE -> "($it | null)"
+            Nullability.NOT_NULL,
+            Nullability.PLATFORM -> it
+        }
+    }
 }
