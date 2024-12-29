@@ -82,7 +82,7 @@ class Kt2TsSymbolProcessor(
             if (configuration.mapClass != null && configuration.mapClassFile != null) {
                 ClassMapping(configuration.mapClass, configuration.mapClassFile)
             } else {
-                null
+                ClassMapping("Record", null)
             }
         }
         val parsingResult =

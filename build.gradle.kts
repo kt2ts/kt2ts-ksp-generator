@@ -11,7 +11,7 @@ buildscript {
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://mlorber.net/maven_repo") }
+    maven("https://mlorber.net/maven_repo")
 }
 
 sourceSets.main {
@@ -31,7 +31,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "io.github.kt2ts"
             artifactId = "kt2ts-ksp-generator"
-            version = "0.0.9"
+            version = "0.0.10"
 
             from(components["kotlin"])
         }
