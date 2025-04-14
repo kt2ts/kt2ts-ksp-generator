@@ -235,7 +235,7 @@ class Kt2TsSymbolProcessor(
                 val formatResult =
                     ShellRunner.run(
                         configuration.clientDirectory,
-                        "node",
+                        configuration.nodeBinary ?: "node",
                         configuration.prettierBinary,
                         "--config",
                         "package.json",

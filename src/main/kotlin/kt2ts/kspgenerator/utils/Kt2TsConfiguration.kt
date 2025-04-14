@@ -32,6 +32,7 @@ data class Kt2TsConfiguration(
     val interfaceAsTypes: Set<String>,
     val mapClass: String?,
     val mapClassFile: String?,
+    val nodeBinary: String?,
     val prettierDependencyInstall: String?,
     val prettierBinary: String?,
     val absoluteImport: Boolean,
@@ -62,6 +63,7 @@ data class Kt2TsConfiguration(
                 // TODO use instead of temp dir ?
                 mapClass = options["kt2ts:mapClass"],
                 mapClassFile = options["kt2ts:mapClassFile"],
+                nodeBinary = options["kt2ts:nodeBinary"],
                 prettierDependencyInstall = options["kt2ts:prettierDependencyInstall"],
                 prettierBinary = options["kt2ts:prettierBinary"],
                 absoluteImport = options["kt2ts:absoluteImport"] == "true",

@@ -19,6 +19,7 @@ internal class ImportWriterTest {
             interfaceAsTypes = emptySet(),
             mapClass = null,
             mapClassFile = null,
+            nodeBinary = null,
             prettierDependencyInstall = null,
             prettierBinary = null,
             absoluteImport = false,
