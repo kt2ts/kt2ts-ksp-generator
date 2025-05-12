@@ -34,7 +34,7 @@ object ClassParser {
         //        val otherImports: List<String>,
         //        val fields: List<ParsedField>,
         //        val addObjectType: Boolean,
-        val debug: Any? = null
+        val debug: Any? = null,
     ) {
         // without it we have duplicates (KS* comparison doesn't work as expected)
         override fun equals(other: Any?) =
@@ -49,9 +49,12 @@ object ClassParser {
 
     // TODO[tmpl] sealed support is very limited
     // will work if a field uses the sealed object and not directly a subclass
-    fun parse(t: KSType, data: Set<Parsed>,
-              mappings: Map<String, String>,
-              mapClassMapping: ClassMapping?): Set<Parsed> {
+    fun parse(
+        t: KSType,
+        data: Set<Parsed>,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?,
+    ): Set<Parsed> {
         let {
             val p = t.declaration.packageName.asString()
             val i = p.indexOf(".")
@@ -115,9 +118,11 @@ object ClassParser {
     //    }
 
     // TODO[tmpl] test: generic with generic inside
-    fun mapDependencies(t: KSTypeReference,
-                        mappings: Map<String, String>,
-                        mapClassMapping: ClassMapping?): List<KSTypeReference> {
+    fun mapDependencies(
+        t: KSTypeReference,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?,
+    ): List<KSTypeReference> {
         //        val d = t.resolve().declaration as? KSClassDeclaration
         //        val a = allAscendance(classDeclaration)
         // TODO[tmpl] this method to find ancestry is actually a very bad idea
@@ -141,8 +146,7 @@ object ClassParser {
                 ?.mapNotNull { it.type }
                 // TODO[tmpl] HERE we can fall in a infinite loop ?
                 // but DO NOT use data to filter, we need a contextual set()
-                ?.flatMap { mapDependencies(it, mappings, mapClassMapping) }
-                ?: emptyList()
+                ?.flatMap { mapDependencies(it, mappings, mapClassMapping) } ?: emptyList()
         // TODO[tmpl] actually not a good idea, take out the mapped to get them later
         val r =
             if (mapProperty(t, mappings, mapClassMapping) == null) {

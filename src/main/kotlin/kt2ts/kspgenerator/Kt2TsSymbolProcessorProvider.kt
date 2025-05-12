@@ -9,5 +9,6 @@ class Kt2TsSymbolProcessorProvider : SymbolProcessorProvider {
         Kt2TsSymbolProcessor(
             codeGenerator = environment.codeGenerator,
             logger = environment.logger,
-            options = environment.options)
+            options = environment.options,
+        )
 }

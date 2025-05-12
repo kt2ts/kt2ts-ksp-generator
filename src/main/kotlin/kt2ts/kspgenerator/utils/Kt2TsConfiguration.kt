@@ -37,7 +37,7 @@ data class Kt2TsConfiguration(
     val prettierBinary: String?,
     val absoluteImport: Boolean,
     val absoluteImportPrefix: String?,
-    val debugFile: File?
+    val debugFile: File?,
 ) {
     companion object {
         fun init(options: Map<String, String>): Kt2TsConfiguration {
@@ -68,7 +68,8 @@ data class Kt2TsConfiguration(
                 prettierBinary = options["kt2ts:prettierBinary"],
                 absoluteImport = options["kt2ts:absoluteImport"] == "true",
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
-                debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() })
+                debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() },
+            )
         }
     }
 }

@@ -24,7 +24,7 @@ internal class ImportWriterTest {
             prettierBinary = null,
             absoluteImport = false,
             absoluteImportPrefix = null,
-            debugFile = null
+            debugFile = null,
         )
 
     @Test
@@ -34,7 +34,9 @@ internal class ImportWriterTest {
             relativePath(
                 "/root/subpath1/subpath2/target-file.ts",
                 "/root/subpath1/subpath2/origin-file.ts",
-                testConfiguration))
+                testConfiguration,
+            ),
+        )
     }
 
     @Test
@@ -44,7 +46,9 @@ internal class ImportWriterTest {
             relativePath(
                 "/root/subpath1/subpath2.1/target-file.ts",
                 "/root/subpath1/subpath2.2/origin-file.ts",
-                testConfiguration))
+                testConfiguration,
+            ),
+        )
     }
 
     @Test
@@ -54,6 +58,8 @@ internal class ImportWriterTest {
             relativePath(
                 "/root/subpath1.1/subpath2.1/target-file.ts",
                 "/root/subpath1.2/subpath2.2/origin-file.ts",
-                testConfiguration))
+                testConfiguration,
+            ),
+        )
     }
 }

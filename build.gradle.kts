@@ -1,22 +1,16 @@
 plugins {
-    kotlin("jvm") version "1.8.21" //apply false
+    kotlin("jvm") version "1.8.21" // apply false
     `maven-publish`
 }
 
-buildscript {
-    dependencies {
-        classpath(kotlin("gradle-plugin", version = "1.8.0"))
-    }
-}
+buildscript { dependencies { classpath(kotlin("gradle-plugin", version = "1.8.0")) } }
 
 repositories {
     mavenCentral()
     maven("https://mlorber.net/maven_repo")
 }
 
-sourceSets.main {
-    java.srcDirs("src/main/kotlin")
-}
+sourceSets.main { java.srcDirs("src/main/kotlin") }
 
 java {
     /*

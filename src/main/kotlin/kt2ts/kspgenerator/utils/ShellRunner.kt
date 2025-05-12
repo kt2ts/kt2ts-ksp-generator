@@ -9,7 +9,7 @@ object ShellRunner {
     data class CommandResult(
         val exitCode: Int,
         val output: List<String>,
-        val errorOutput: List<String>
+        val errorOutput: List<String>,
     )
 
     fun run(command: String, vararg params: String): CommandResult = doRun(null, command, *params)

@@ -9,8 +9,6 @@ class Kt2TsVisitor : KSEmptyVisitor<Set<ClassParser.Parsed>, Set<ClassParser.Par
 
     override fun defaultHandler(node: KSNode, data: Set<ClassParser.Parsed>) = data
 
-    override fun visitClassDeclaration(
-        d: KSClassDeclaration,
-        data: Set<ClassParser.Parsed>,
-    ) = TODO() // ClassParser.parse(d.asStarProjectedType(), data)
+    override fun visitClassDeclaration(d: KSClassDeclaration, data: Set<ClassParser.Parsed>) =
+        TODO() // ClassParser.parse(d.asStarProjectedType(), data)
 }

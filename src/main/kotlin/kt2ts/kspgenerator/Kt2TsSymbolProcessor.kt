@@ -1,10 +1,10 @@
 package kt2ts.kspgenerator
 
-import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
@@ -16,6 +16,7 @@ import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 import kotlin.io.path.pathString
 import kt2ts.annotation.GenerateTypescript
 import kt2ts.kspgenerator.utils.ClassMapper
@@ -29,7 +30,6 @@ import kt2ts.kspgenerator.utils.ImportWriter.relativePath
 import kt2ts.kspgenerator.utils.Kt2TsConfiguration
 import kt2ts.kspgenerator.utils.ShellRunner
 import kt2ts.kspgenerator.utils.prettyPrint
-import kotlin.io.path.notExists
 
 // TODO[tmpl] use exceptions and catch them for debug report ?
 // TODO[tmpl] clean !!
@@ -42,7 +42,7 @@ import kotlin.io.path.notExists
 class Kt2TsSymbolProcessor(
     val codeGenerator: CodeGenerator,
     val logger: KSPLogger,
-    val options: Map<String, String>
+    val options: Map<String, String>,
 ) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val startTime = System.currentTimeMillis()
@@ -71,7 +71,9 @@ class Kt2TsSymbolProcessor(
         debugReport?.appendLine(configuration.prettyPrint())
         debugReport?.apply {
             appendLine("<h1>Initial symbols selection</h1>")
-            symbols.sortedBy { it.qualifiedName.toString() }.forEach { appendLine("${it.qualifiedName}") }
+            symbols
+                .sortedBy { it.qualifiedName.toString() }
+                .forEach { appendLine("${it.qualifiedName}") }
         }
         //        val visitor = Kt2TsVisitor()
         // TODO[tmpl] add exceptions: mapped classes in configuration
@@ -90,7 +92,10 @@ class Kt2TsSymbolProcessor(
             symbols
                 .fold(emptySet<ClassParser.Parsed>()) { acc, declaration ->
                     ClassParser.parse(
-                        declaration.asStarProjectedType(), acc, configuration.mappings, mapClassMapping
+                        declaration.asStarProjectedType(),
+                        acc,
+                        configuration.mappings,
+                        mapClassMapping,
                     )
                 }
                 .filter { it.file in modifiedFiles }
@@ -142,7 +147,7 @@ class Kt2TsSymbolProcessor(
                                             ClassMapper.mapProperty(
                                                 it.type,
                                                 configuration.mappings,
-                                                mapClassMapping
+                                                mapClassMapping,
                                             )
                                         }
                                 }
@@ -163,7 +168,7 @@ class Kt2TsSymbolProcessor(
                                     d.containingFile?.let {
                                         ClassMapper.ClassMapping(
                                             ClassWriter.className(d),
-                                            kotlinToTsFile(it, configuration)
+                                            kotlinToTsFile(it, configuration),
                                         )
                                     }
                                 }
@@ -174,7 +179,7 @@ class Kt2TsSymbolProcessor(
                                     ClassMapper.mapClass(
                                         it,
                                         configuration.nominalStringMappings,
-                                        configuration.nominalStringImport
+                                        configuration.nominalStringImport,
                                     )
                                 }
                         dependenciesImportsMapped + dependenciesImports + classImports
@@ -220,7 +225,7 @@ class Kt2TsSymbolProcessor(
                                 configuration.mappings,
                                 configuration.nominalStringMappings,
                                 configuration.nominalStringImport,
-                                mapClassMapping
+                                mapClassMapping,
                             )
                         )
                     }
@@ -233,14 +238,12 @@ class Kt2TsSymbolProcessor(
         // }
         //        }
         debugReport?.appendLine("<h1>Format</h1>")
-        if (configuration.prettierBinary != null &&
-            configuration.clientDirectory.resolve(configuration.prettierBinary).notExists() &&
-            configuration.prettierDependencyInstall != null
+        if (
+            configuration.prettierBinary != null &&
+                configuration.clientDirectory.resolve(configuration.prettierBinary).notExists() &&
+                configuration.prettierDependencyInstall != null
         ) {
-            ShellRunner.run(
-                configuration.clientDirectory,
-                configuration.prettierDependencyInstall
-            )
+            ShellRunner.run(configuration.clientDirectory, configuration.prettierDependencyInstall)
         }
         result.forEach { (ksFile, path) ->
             // works if packages are ok
@@ -261,21 +264,22 @@ class Kt2TsSymbolProcessor(
                         "--config",
                         "package.json",
                         "--write",
-                        path.absolutePathString()
+                        path.absolutePathString(),
                     )
                 if (formatResult.exitCode != 0) {
                     Files.write(
                         path,
                         ("// [WARN] could not format files, is node_modules installed ?\n" +
                                 Files.readString(path))
-                            .toByteArray(Charsets.UTF_8)
+                            .toByteArray(Charsets.UTF_8),
                     )
                     debugReport?.appendLine("<pre>Failed format ${path.fileName}</pre>")
                     debugReport?.appendLine("<pre>Output: ${formatResult.output}</pre>")
                     debugReport?.appendLine("<pre>Error output: ${formatResult.errorOutput}</pre>")
                 }
             }
-            // file is written once at the end of the process to avoid triggering webpack hot reload serveral times
+            // file is written once at the end of the process to avoid triggering webpack hot reload
+            // serveral times
             ShellRunner.run("mv", path.absolutePathString(), destination.absolutePathString())
         }
         // Delete generated files which does not exist anymore in Kotlin
@@ -289,7 +293,8 @@ class Kt2TsSymbolProcessor(
                         it.filePath
                             .dropLastWhile { it != '/' }
                             .dropLast(it.packageName.asString().length + 1)
-                    })
+                    }
+                )
             it.toFile().walk().forEach {
                 if (it.extension == generatedFileExtention) {
                     val relativeFilePath =

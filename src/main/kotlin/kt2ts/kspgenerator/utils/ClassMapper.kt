@@ -10,7 +10,11 @@ object ClassMapper {
     // TODO[tmpl] an example if there isn't in default generated code
     data class ClassMapping(val name: String, val tsFile: String? = null)
 
-    fun mapProperty(t: KSTypeReference, mappings: Map<String, String>, mapClassMapping: ClassMapping?): ClassMapping? {
+    fun mapProperty(
+        t: KSTypeReference,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?,
+    ): ClassMapping? {
         val d = t.resolve().declaration as? KSClassDeclaration ?: return null
         val qualifiedName = d.qualifiedName?.asString()
         if (qualifiedName != null && qualifiedName in mappings.keys) {
@@ -32,12 +36,14 @@ object ClassMapper {
             }
             Pair::class.qualifiedName -> {
                 val a = t.element?.typeArguments ?: throw IllegalArgumentException()
-                val t1 = (a.firstOrNull()?.type ?: throw IllegalArgumentException()).let {
-                    nullablePropertyClassName(it, mappings, mapClassMapping)
-                }
-                val t2 = (a.getOrNull(1)?.type ?: throw IllegalArgumentException()).let {
-                    nullablePropertyClassName(it, mappings, mapClassMapping)
-                }
+                val t1 =
+                    (a.firstOrNull()?.type ?: throw IllegalArgumentException()).let {
+                        nullablePropertyClassName(it, mappings, mapClassMapping)
+                    }
+                val t2 =
+                    (a.getOrNull(1)?.type ?: throw IllegalArgumentException()).let {
+                        nullablePropertyClassName(it, mappings, mapClassMapping)
+                    }
                 ClassMapping("[$t1,$t2]")
             }
             // TODO[tmpl] Record vs Dict we have a problem
@@ -53,11 +59,10 @@ object ClassMapper {
                 // - not nullable
                 val t1 =
                     (t.element?.typeArguments?.firstOrNull()?.type
-                        ?: throw IllegalArgumentException())
+                            ?: throw IllegalArgumentException())
                         .let { propertyClassMap(it, mappings, mapClassMapping).name }
                 val t2 =
-                    (t.element?.typeArguments?.get(1)?.type
-                        ?: throw IllegalArgumentException())
+                    (t.element?.typeArguments?.get(1)?.type ?: throw IllegalArgumentException())
                         .let { nullablePropertyClassName(it, mappings, mapClassMapping) }
                 ClassMapping("${mapClassMapping.name}<$t1,$t2>", mapClassMapping.tsFile)
             }
@@ -69,14 +74,15 @@ object ClassMapper {
     fun mapClass(
         d: KSClassDeclaration,
         nominalStringMappings: Set<String>,
-        nominalStringImport: String?
+        nominalStringImport: String?,
     ): ClassMapping? {
         val ancestry = recursiveAncestry(d).mapNotNull { it.qualifiedName?.asString() }
         nominalStringMappings.forEach {
             if (it in ancestry) {
                 return ClassMapping(
                     "NominalString<'${d.simpleName.asString()}'>",
-                    nominalStringImport ?: "utils/nominal-class")
+                    nominalStringImport ?: "utils/nominal-class",
+                )
             }
         }
         return null

@@ -11,11 +11,13 @@ import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 object ClassWriter {
 
     // TODO[tmpl] about support of Jackson annotations ? field @Ignore
-    fun toTs(parsed: ClassParser.Parsed,
-             mappings: Map<String, String>,
-             nominalStringMappings: Set<String>,
-             nominalStringImport: String?,
-             mapClassMapping: ClassMapping?): StringBuilder {
+    fun toTs(
+        parsed: ClassParser.Parsed,
+        mappings: Map<String, String>,
+        nominalStringMappings: Set<String>,
+        nominalStringImport: String?,
+        mapClassMapping: ClassMapping?,
+    ): StringBuilder {
         val d = parsed.type.declaration as? KSClassDeclaration ?: throw IllegalArgumentException()
         val mapping = ClassMapper.mapClass(d, nominalStringMappings, nominalStringImport)
         val sb = StringBuilder()
@@ -42,25 +44,25 @@ object ClassWriter {
                             // TODO[tmpl] depends on the jackson annotation
                             sb.appendLine("  objectType: '${className(d)}';")
                         }
-                        d.declarations
-                            .filterIsInstance<KSPropertyDeclaration>()
-                            .forEach {
-                                val nullableMark =
-                                    when (it.type.resolve().nullability) {
-                                        Nullability.NULLABLE -> "?"
-                                        Nullability.NOT_NULL,
-                                        Nullability.PLATFORM -> ""
-                                    }
-                                sb.appendLine(
-                                    "  ${it.simpleName.asString()}$nullableMark: ${propertyClassMap(it.type, mappings, mapClassMapping).name};")
-                            }
+                        d.declarations.filterIsInstance<KSPropertyDeclaration>().forEach {
+                            val nullableMark =
+                                when (it.type.resolve().nullability) {
+                                    Nullability.NULLABLE -> "?"
+                                    Nullability.NOT_NULL,
+                                    Nullability.PLATFORM -> ""
+                                }
+                            sb.appendLine(
+                                "  ${it.simpleName.asString()}$nullableMark: ${propertyClassMap(it.type, mappings, mapClassMapping).name};"
+                            )
+                        }
                         sb.appendLine("}")
                         sb.appendLine("")
                     } else {
                         val subTypes = d.getSealedSubclasses().toList()
                         //                                .filter {
                         //                                it.declarations
-                        //                                    .filterIsInstance<KSPropertyDeclaration>()
+                        //
+                        // .filterIsInstance<KSPropertyDeclaration>()
                         //                                    .toList()
                         //                                    .isNotEmpty()
                         //                            }
@@ -83,10 +85,12 @@ object ClassWriter {
                 }
                 ClassKind.ENUM_ENTRY -> TODO()
                 ClassKind.OBJECT -> {
-                    if (d.declarations
-                        .toList()
-                        .filterIsInstance<KSPropertyDeclaration>()
-                        .isNotEmpty()) {
+                    if (
+                        d.declarations
+                            .toList()
+                            .filterIsInstance<KSPropertyDeclaration>()
+                            .isNotEmpty()
+                    ) {
                         TODO()
                     } else {
                         // TODO[tmpl] not good but the only way to handle EmptyCommandResponse for
@@ -119,21 +123,21 @@ object ClassWriter {
     fun propertyClassMap(
         t: KSTypeReference,
         mappings: Map<String, String>,
-        mapClassMapping: ClassMapping?
+        mapClassMapping: ClassMapping?,
     ): ClassMapping =
         ClassMapper.mapProperty(t, mappings, mapClassMapping)
             ?: ClassMapping(className(t.resolve().declaration))
 
-
     fun nullablePropertyClassName(
-        t: KSTypeReference, mappings: Map<String, String>,
-        mapClassMapping: ClassMapping?
+        t: KSTypeReference,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?,
     ) =
         propertyClassMap(t, mappings, mapClassMapping).name.let {
-        when (t.resolve().nullability) {
-            Nullability.NULLABLE -> "($it | null)"
-            Nullability.NOT_NULL,
-            Nullability.PLATFORM -> it
+            when (t.resolve().nullability) {
+                Nullability.NULLABLE -> "($it | null)"
+                Nullability.NOT_NULL,
+                Nullability.PLATFORM -> it
+            }
         }
-    }
 }
