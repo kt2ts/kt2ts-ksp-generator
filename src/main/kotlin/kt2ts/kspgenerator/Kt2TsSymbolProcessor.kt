@@ -72,8 +72,8 @@ class Kt2TsSymbolProcessor(
         debugReport?.apply {
             appendLine("<h1>Initial symbols selection</h1>")
             symbols
-                .sortedBy { it.qualifiedName.toString() }
-                .forEach { appendLine("${it.qualifiedName}") }
+                .sortedBy { it.qualifiedName?.asString() }
+                .forEach { appendLine("${it.qualifiedName?.asString()}") }
         }
         //        val visitor = Kt2TsVisitor()
         // TODO[tmpl] add exceptions: mapped classes in configuration
