@@ -31,13 +31,25 @@ object ClassWriter {
         }
         if (mapping == null) {
             when (d.classKind) {
-                ClassKind.INTERFACE -> TODO()
+                ClassKind.INTERFACE -> {
+                    val subTypes = d.getSealedSubclasses().toList()
+                    if (subTypes.isNotEmpty()) {
+                        sb.appendLine("export type ${className(d)} =")
+                        subTypes.forEach { sb.appendLine("  | ${className(it)}") }
+                        sb.appendLine("")
+                    }
+                }
+
                 ClassKind.CLASS -> {
                     // TODO[tmpl] filtering on properties existence should be done at initial
                     // selection => or not for sealed
+                    // TODO some class can have properties AND be a sealed class
                     val properties =
                         d.declarations.filterIsInstance<KSPropertyDeclaration>().toList()
-                    if (properties.isNotEmpty() || parentIsSealedClass) {
+                    // TODO || parentIsSealedClass ??
+                    val isSealedClass = d.getSealedSubclasses().toList().isNotEmpty()
+                    if (!isSealedClass) {
+                        // former if : if (properties.isNotEmpty() || parentIsSealedClass) {
                         // TODO[tmpl] about class which are not data classes
                         sb.appendLine("export interface ${className(d)} {")
                         if (parentIsSealedClass) {
@@ -51,9 +63,8 @@ object ClassWriter {
                                     Nullability.NOT_NULL,
                                     Nullability.PLATFORM -> ""
                                 }
-                            sb.appendLine(
-                                "  ${it.simpleName.asString()}$nullableMark: ${propertyClassMap(it.type, mappings, mapClassMapping).name};"
-                            )
+                            val c = propertyClassMap(it.type, mappings, mapClassMapping)
+                            sb.appendLine("  ${it.simpleName.asString()}$nullableMark: ${c.name};")
                         }
                         sb.appendLine("}")
                         sb.appendLine("")
@@ -73,6 +84,7 @@ object ClassWriter {
                         }
                     }
                 }
+
                 ClassKind.ENUM_CLASS -> {
                     sb.appendLine("export type ${className(d)} = ")
                     d.declarations
@@ -83,7 +95,10 @@ object ClassWriter {
                     //                    d.declarations.toList().forEach { Debug.add("$it
                     // ${it::class.java}") }
                 }
-                ClassKind.ENUM_ENTRY -> TODO()
+
+                ClassKind.ENUM_ENTRY ->
+                    TODO("ClassKind.ENUM_ENTRY is not implemented ${className(d)}")
+
                 ClassKind.OBJECT -> {
                     if (
                         d.declarations
@@ -91,7 +106,9 @@ object ClassWriter {
                             .filterIsInstance<KSPropertyDeclaration>()
                             .isNotEmpty()
                     ) {
-                        TODO()
+                        TODO(
+                            "ClassKind.OBJECT with declarations is not implemented ${className(d)}"
+                        )
                     } else {
                         // TODO[tmpl] not good but the only way to handle EmptyCommandResponse for
                         // the moment
@@ -104,7 +121,9 @@ object ClassWriter {
                         }
                     }
                 }
-                ClassKind.ANNOTATION_CLASS -> TODO()
+
+                ClassKind.ANNOTATION_CLASS ->
+                    TODO("ClassKind.ANNOTATION_CLASS is not implemented ${className(d)}")
             }
         } else {
             sb.appendLine("export type ${className(d)} = ${mapping.name};")
