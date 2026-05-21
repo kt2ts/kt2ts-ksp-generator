@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import com.google.devtools.ksp.symbol.Nullability
 import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
@@ -133,10 +134,46 @@ object ClassWriter {
     }
 
     fun className(d: KSDeclaration): String {
+        // [doc] type parameters (T, K…) carry their declaring class as parentDeclaration; do not
+        // prefix or they become invalid TS identifiers like "InsertsDto$T".
+        if (d is KSTypeParameter) {
+            return d.simpleName.asString()
+        }
         // TODO is enough ? only KSClassDeclaration can contain inner classes ?
         val parent = d.parentDeclaration as? KSClassDeclaration
         val prefix = parent?.let { className(it) + "$" } ?: ""
+        val suffix =
+            if (d is KSClassDeclaration && d.typeParameters.isNotEmpty()) {
+                d.typeParameters.joinToString(", ", "<", ">") { it.simpleName.asString() }
+            } else {
+                ""
+            }
+        return prefix + d.simpleName.asString() + suffix
+    }
+
+    // [doc] like className but without the generic <T, K…> suffix, used at property usage sites
+    // where the actual type arguments are appended instead.
+    private fun rawName(d: KSDeclaration): String {
+        if (d is KSTypeParameter) {
+            return d.simpleName.asString()
+        }
+        val parent = d.parentDeclaration as? KSClassDeclaration
+        val prefix = parent?.let { className(it) + "$" } ?: ""
         return prefix + d.simpleName.asString()
+    }
+
+    private fun propertyTypeName(
+        t: KSTypeReference,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?,
+    ): String {
+        val mapped = ClassMapper.mapProperty(t, mappings, mapClassMapping)
+        if (mapped != null) return mapped.name
+        val resolved = t.resolve()
+        val base = rawName(resolved.declaration)
+        val args = t.element?.typeArguments?.mapNotNull { it.type }.orEmpty()
+        return if (args.isEmpty()) base
+        else base + args.joinToString(", ", "<", ">") { propertyTypeName(it, mappings, mapClassMapping) }
     }
 
     fun propertyClassMap(
@@ -145,7 +182,7 @@ object ClassWriter {
         mapClassMapping: ClassMapping?,
     ): ClassMapping =
         ClassMapper.mapProperty(t, mappings, mapClassMapping)
-            ?: ClassMapping(className(t.resolve().declaration))
+            ?: ClassMapping(propertyTypeName(t, mappings, mapClassMapping))
 
     fun nullablePropertyClassName(
         t: KSTypeReference,

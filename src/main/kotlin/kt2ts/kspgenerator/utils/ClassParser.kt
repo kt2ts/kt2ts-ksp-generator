@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.KSTypeReference
 import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 import kt2ts.kspgenerator.utils.ClassMapper.mapProperty
@@ -63,9 +64,8 @@ object ClassParser {
                 return data
             }
         }
-        val d =
-            t.declaration as? KSClassDeclaration
-                ?: throw IllegalArgumentException("${t.declaration}")
+        // [doc] type parameters (T, K…), type aliases, etc. are not classes to descend into.
+        val d = t.declaration as? KSClassDeclaration ?: return data
         val dependencies =
             d.declarations
                 //                .mapNotNull { (it as?
@@ -76,21 +76,28 @@ object ClassParser {
                 //                .filterIsInstance<KSClassDeclaration>()
                 //                .mapNotNull { mapDependency(it) }
                 .toSet()
-        val alreadySet = data.map { it.type }.toSet()
-        return (data + Parsed(t, d.containingFile, dependencies))
-            .let {
+        val withCurrent = data + Parsed(t, d.containingFile, dependencies)
+        // [doc] dedup by qualifiedName: KSType equality is not stable across resolve() calls.
+        val alreadyNames =
+            withCurrent.mapNotNull { it.type.declaration.qualifiedName?.asString() }.toSet()
+        return withCurrent
+            .let { acc ->
                 dependencies
                     // [doc] infinite loop is possible without it
-                    // TODO[tmpl] test works as expected !
-                    .filter { it.resolve() !in alreadySet }
-                    .fold(it) { acc, d -> parse(d.resolve(), acc, mappings, mapClassMapping) }
+                    .filter {
+                        it.resolve().declaration.qualifiedName?.asString() !in alreadyNames
+                    }
+                    .fold(acc) { a, d -> parse(d.resolve(), a, mappings, mapClassMapping) }
             }
             // TODO[tmpl] a priori we should use findActuals
-            .let {
-                // TODO[tmpl] infinite loop is possible ?
-                d.getSealedSubclasses().fold(it) { acc, d ->
-                    parse(d.asStarProjectedType(), acc, mappings, mapClassMapping)
-                }
+            .let { acc ->
+                val seen =
+                    acc.mapNotNull { it.type.declaration.qualifiedName?.asString() }.toSet()
+                d.getSealedSubclasses()
+                    .filter { it.qualifiedName?.asString() !in seen }
+                    .fold(acc) { a, d ->
+                        parse(d.asStarProjectedType(), a, mappings, mapClassMapping)
+                    }
             }
     }
 
@@ -147,6 +154,11 @@ object ClassParser {
                 // TODO[tmpl] HERE we can fall in a infinite loop ?
                 // but DO NOT use data to filter, we need a contextual set()
                 ?.flatMap { mapDependencies(it, mappings, mapClassMapping) } ?: emptyList()
+        // [doc] type parameters (T, K…) are placeholders, not concrete dependencies; do not
+        // emit them so callers don't try to resolve them as classes downstream.
+        if (t.resolve().declaration is KSTypeParameter) {
+            return arguments
+        }
         // TODO[tmpl] actually not a good idea, take out the mapped to get them later
         val r =
             if (mapProperty(t, mappings, mapClassMapping) == null) {
