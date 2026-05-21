@@ -33,11 +33,13 @@ object ClassMapper {
         mappings: Map<String, String>,
         mapClassMapping: ClassMapping?,
     ): ClassMapping? {
-        val d = t.resolve().declaration as? KSClassDeclaration ?: return null
-        val qualifiedName = d.qualifiedName?.asString()
+        val rawDecl = t.resolve().declaration
+        // [doc] check mappings before casting to KSClassDeclaration so type aliases work too.
+        val qualifiedName = rawDecl.qualifiedName?.asString()
         if (qualifiedName != null && qualifiedName in mappings.keys) {
-            return ClassMapping(d.simpleName.asString(), mappings.getValue(qualifiedName))
+            return ClassMapping(rawDecl.simpleName.asString(), mappings.getValue(qualifiedName))
         }
+        val d = rawDecl as? KSClassDeclaration ?: return null
         return when (qualifiedName) {
             Boolean::class.qualifiedName -> ClassMapping("boolean")
             Double::class.qualifiedName -> ClassMapping("number")
