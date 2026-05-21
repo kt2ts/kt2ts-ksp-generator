@@ -135,16 +135,20 @@ class Kt2TsSymbolProcessor(
                     file.parent.toFile().mkdirs()
                     // TODO un imports writer...
                     val imports = let {
-                        val dependenciesImportsMapped =
-                            parsed.flatMap {
-                                val d = it.type.declaration as KSClassDeclaration
+                        val dependenciesImportsMapped: List<ClassMapping> =
+                            parsed.flatMap { p ->
+                                val d = p.type.declaration as KSClassDeclaration
                                 if (d.classKind == ClassKind.ENUM_CLASS) {
-                                    emptySequence()
+                                    emptyList()
                                 } else {
                                     d.declarations
                                         .filterIsInstance<KSPropertyDeclaration>()
-                                        .mapNotNull {
-                                            ClassMapper.mapProperty(
+                                        .toList()
+                                        .flatMap {
+                                            // [doc] recurse into type arguments — a mapped type
+                                            // can be nested inside a generic (e.g. inside
+                                            // DiffWithInserts<X> or List<X>).
+                                            ClassMapper.collectMappedTypes(
                                                 it.type,
                                                 configuration.mappings,
                                                 mapClassMapping,

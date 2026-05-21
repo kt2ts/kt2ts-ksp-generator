@@ -10,6 +10,24 @@ object ClassMapper {
     // TODO[tmpl] an example if there isn't in default generated code
     data class ClassMapping(val name: String, val tsFile: String? = null)
 
+    // [doc] Walk a property's type tree and return every mapping that applies — the outer type
+    // plus any mapped type argument. mapProperty alone misses arguments deep inside generics
+    // (e.g. ProviderInformations inside DiffWithInserts<ProviderInformations>), which then go
+    // unimported in the generated TS.
+    fun collectMappedTypes(
+        t: KSTypeReference,
+        mappings: Map<String, String>,
+        mapClassMapping: ClassMapping?,
+    ): List<ClassMapping> {
+        val self = listOfNotNull(mapProperty(t, mappings, mapClassMapping))
+        val args =
+            t.element
+                ?.typeArguments
+                ?.mapNotNull { it.type }
+                ?.flatMap { collectMappedTypes(it, mappings, mapClassMapping) } ?: emptyList()
+        return self + args
+    }
+
     fun mapProperty(
         t: KSTypeReference,
         mappings: Map<String, String>,
