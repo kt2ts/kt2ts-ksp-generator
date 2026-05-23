@@ -36,8 +36,11 @@ object ClassMapper {
         val rawDecl = t.resolve().declaration
         // [doc] check mappings before casting to KSClassDeclaration so type aliases work too.
         val qualifiedName = rawDecl.qualifiedName?.asString()
-        if (qualifiedName != null && qualifiedName in mappings.keys) {
-            return ClassMapping(rawDecl.simpleName.asString(), mappings.getValue(qualifiedName))
+        if (qualifiedName != null) {
+            val mapped = lookupMapping(qualifiedName, mappings)
+            if (mapped != null) {
+                return ClassMapping(rawDecl.simpleName.asString(), mapped)
+            }
         }
         val d = rawDecl as? KSClassDeclaration ?: return null
         return when (qualifiedName) {
@@ -106,6 +109,49 @@ object ClassMapper {
             }
         }
         return null
+    }
+
+    // [doc] resolves a class qualified name against the user-supplied mapping table. Exact-key
+    // hits are preferred; otherwise any key containing `*` is treated as a glob (single `*`
+    // matches one segment, i.e. `[^.]*`; `**` matches across dots). Among multiple matching
+    // patterns, the longest pattern (the most specific) wins to make conflicts deterministic.
+    internal fun lookupMapping(qualifiedName: String, mappings: Map<String, String>): String? {
+        mappings[qualifiedName]?.let {
+            return it
+        }
+        return mappings
+            .filterKeys { it.contains('*') }
+            .filterKeys { patternMatches(it, qualifiedName) }
+            .maxByOrNull { it.key.length }
+            ?.value
+    }
+
+    internal fun patternMatches(pattern: String, value: String): Boolean {
+        val regex =
+            buildString {
+                    append('^')
+                    var i = 0
+                    while (i < pattern.length) {
+                        val c = pattern[i]
+                        when {
+                            c == '*' && i + 1 < pattern.length && pattern[i + 1] == '*' -> {
+                                append(".*")
+                                i += 2
+                            }
+                            c == '*' -> {
+                                append("[^.]*")
+                                i++
+                            }
+                            else -> {
+                                append(Regex.escape(c.toString()))
+                                i++
+                            }
+                        }
+                    }
+                    append('$')
+                }
+                .let(::Regex)
+        return regex.matches(value)
     }
 
     // TODO[tmpl] name
