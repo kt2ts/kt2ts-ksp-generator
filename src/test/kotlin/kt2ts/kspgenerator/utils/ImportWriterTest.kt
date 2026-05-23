@@ -24,6 +24,7 @@ internal class ImportWriterTest {
             prettierBinary = null,
             absoluteImport = false,
             absoluteImportPrefix = null,
+            manifestOutput = null,
             debugFile = null,
         )
 

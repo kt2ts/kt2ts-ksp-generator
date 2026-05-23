@@ -317,6 +317,42 @@ class Kt2TsSymbolProcessor(
                 }
             }
         }
+        // [doc] writes a kt2ts-manifest.json that consumer modules can read to auto-resolve
+        // cross-module @GenerateTypescript types. Only meaningful with absolute imports — without
+        // them, each consumer's import path differs.
+        if (configuration.manifestOutput != null) {
+            if (!configuration.absoluteImport || configuration.absoluteImportPrefix == null) {
+                logger.warn(
+                    "kt2ts:manifestOutput is set but kt2ts:absoluteImport / kt2ts:absoluteImportPrefix " +
+                        "are not — manifest emission requires absolute imports. Skipping."
+                )
+                debugReport?.appendLine("<h1>Manifest</h1>")
+                debugReport?.appendLine("skipped: absolute imports not configured")
+            } else {
+                val manifestClasses =
+                    parsingResult
+                        .mapNotNull { p ->
+                            val qn =
+                                p.type.declaration.qualifiedName?.asString()
+                                    ?: return@mapNotNull null
+                            val f = p.type.declaration.containingFile ?: return@mapNotNull null
+                            qn to absolutePath(kotlinToTsFile(f, configuration), configuration)
+                        }
+                        .sortedBy { it.first }
+                        .toMap(LinkedHashMap())
+                val manifest =
+                    org.json.JSONObject().apply {
+                        put("version", 1)
+                        put("classes", org.json.JSONObject(manifestClasses as Map<*, *>))
+                    }
+                configuration.manifestOutput.parentFile?.mkdirs()
+                configuration.manifestOutput.writeText(manifest.toString(2))
+                debugReport?.appendLine("<h1>Manifest</h1>")
+                debugReport?.appendLine(
+                    "wrote ${manifestClasses.size} entries to ${configuration.manifestOutput.absolutePath}"
+                )
+            }
+        }
         debugReport?.appendLine("<h1>Report</h1>")
         debugReport?.appendLine("Finished generation ${LocalDateTime.now()}")
         debugReport?.appendLine("Took ${System.currentTimeMillis() - startTime}ms")

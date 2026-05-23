@@ -38,6 +38,10 @@ data class Kt2TsConfiguration(
     val prettierBinary: String?,
     val absoluteImport: Boolean,
     val absoluteImportPrefix: String?,
+    // [doc] when set, write a kt2ts-manifest.json after generation listing every generated class
+    // and its absolute TS import path. Consumer modules can read this manifest to auto-resolve
+    // cross-module @GenerateTypescript types without listing them in kt-to-ts-mappings.json.
+    val manifestOutput: File?,
     val debugFile: File?,
 ) {
     companion object {
@@ -66,6 +70,7 @@ data class Kt2TsConfiguration(
                 prettierBinary = options["kt2ts:prettierBinary"],
                 absoluteImport = options["kt2ts:absoluteImport"] == "true",
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
+                manifestOutput = options["kt2ts:manifestOutput"]?.let { Paths.get(it).toFile() },
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() },
             )
         }
