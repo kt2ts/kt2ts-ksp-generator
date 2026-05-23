@@ -112,6 +112,53 @@ internal class Kt2TsConfigurationTest {
     }
 
     @Test
+    fun `manifest file is read into a flat mapping`(@TempDir tmp: Path) {
+        val p =
+            write(
+                tmp,
+                "kt2ts-manifest.json",
+                """{
+                  "version": 1,
+                  "classes": {
+                    "lite.common.domain.Pdl": "@lite-eco/shared/generated/domain/enedis.generated",
+                    "lite.common.domain.ApiPartnerId": "@lite-eco/shared/generated/domain/ids.generated"
+                  }
+                }""",
+            )
+        val mappings = Kt2TsConfiguration.readManifests(p.toString())
+        assertEquals(
+            mapOf(
+                "lite.common.domain.Pdl" to "@lite-eco/shared/generated/domain/enedis.generated",
+                "lite.common.domain.ApiPartnerId" to
+                    "@lite-eco/shared/generated/domain/ids.generated",
+            ),
+            mappings,
+        )
+    }
+
+    @Test
+    fun `several manifest files merge, later overrides earlier`(@TempDir tmp: Path) {
+        val a = write(tmp, "a.json", """{"classes": {"X": "from-a", "Y": "from-a"}}""")
+        val b = write(tmp, "b.json", """{"classes": {"Y": "from-b"}}""")
+        val mappings = Kt2TsConfiguration.readManifests("$a, $b")
+        assertEquals(mapOf("X" to "from-a", "Y" to "from-b"), mappings)
+    }
+
+    @Test
+    fun `missing manifest is skipped, does not throw`(@TempDir tmp: Path) {
+        val missing = tmp.resolve("does-not-exist.json")
+        val mappings = Kt2TsConfiguration.readManifests(missing.toString())
+        assertEquals(emptyMap<String, String>(), mappings)
+    }
+
+    @Test
+    fun `null or blank manifests option yields empty map`() {
+        assertEquals(emptyMap<String, String>(), Kt2TsConfiguration.readManifests(null))
+        assertEquals(emptyMap<String, String>(), Kt2TsConfiguration.readManifests(""))
+        assertEquals(emptyMap<String, String>(), Kt2TsConfiguration.readManifests("   "))
+    }
+
+    @Test
     fun `indirect cycle raises`(@TempDir tmp: Path) {
         write(tmp, "a.json", """{"extends": "b.json"}""")
         val p = write(tmp, "b.json", """{"extends": "a.json"}""")

@@ -55,8 +55,9 @@ data class Kt2TsConfiguration(
                 generatedDirectory = options["kt2ts:generatedDirectory"] ?: "generated",
                 dropPackage = options["kt2ts:dropPackage"] ?: "",
                 mappings =
-                    options["kt2ts:mappings"]?.let { readMappingsFile(Paths.get(it)) }
-                        ?: emptyMap(),
+                    readManifests(options["kt2ts:manifests"]) +
+                        (options["kt2ts:mappings"]?.let { readMappingsFile(Paths.get(it)) }
+                            ?: emptyMap()),
                 nominalStringMappings =
                     options["kt2ts:nominalStringMappings"]?.split("|")?.toSet() ?: emptySet(),
                 nominalStringImport = options["kt2ts:nominalStringImport"],
@@ -73,6 +74,33 @@ data class Kt2TsConfiguration(
                 manifestOutput = options["kt2ts:manifestOutput"]?.let { Paths.get(it).toFile() },
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() },
             )
+        }
+
+        // [doc] reads zero or more kt2ts-manifest.json files (comma-separated paths) and returns
+        // their combined class → import path map. Missing files are skipped with a warning so a
+        // first build (before the producer has emitted its manifest) does not hard-fail; missing
+        // entries will surface later as a normal "type not found" error. When several manifests
+        // are passed, later ones override earlier ones.
+        internal fun readManifests(value: String?): Map<String, String> {
+            if (value.isNullOrBlank()) return emptyMap()
+            return value
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .fold(emptyMap()) { acc, p -> acc + readManifestFile(Paths.get(p)) }
+        }
+
+        private fun readManifestFile(path: Path): Map<String, String> {
+            if (!path.toFile().exists()) {
+                System.err.println(
+                    "[kt2ts] manifest file not found, skipping: $path " +
+                        "(this is expected on a first build before the producer module has run)"
+                )
+                return emptyMap()
+            }
+            val json = JSONObject(path.readText())
+            val classes = json.optJSONObject("classes") ?: return emptyMap()
+            return classes.keySet().associateWith { classes.getString(it) }
         }
 
         // [doc] reads a kt-to-ts-mappings.json. Supports a reserved `extends` key (string or array
