@@ -25,7 +25,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "io.github.kt2ts"
             artifactId = "kt2ts-ksp-generator"
-            version = "0.0.17"
+            version = "0.0.18"
 
             from(components["kotlin"])
         }
