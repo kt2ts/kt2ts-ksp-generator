@@ -69,6 +69,9 @@ class Kt2TsSymbolProcessor(
         debugReport?.appendLine("Start generation ${LocalDateTime.now()}")
         debugReport?.appendLine("<h1>Configuration</h1>")
         debugReport?.appendLine(configuration.prettyPrint())
+        // [doc] surface mapping → missing-file mistakes at generation time rather than at TS
+        // compile time, where the chain of imports makes the original culprit hard to locate.
+        verifyMappingTargets(configuration, debugReport)
         debugReport?.apply {
             appendLine("<h1>Initial symbols selection</h1>")
             symbols
@@ -380,6 +383,44 @@ class Kt2TsSymbolProcessor(
             }
             configuration.debugFile.parentFile.mkdirs()
             configuration.debugFile.writeText(debugReport.toString())
+        }
+    }
+
+    private fun verifyMappingTargets(
+        configuration: Kt2TsConfiguration,
+        debugReport: StringBuilder?,
+    ) {
+        debugReport?.appendLine("<h1>Mapping targets</h1>")
+        val missing = mutableListOf<Pair<String, String>>()
+        configuration.mappings.forEach { (qn, path) ->
+            // Skip package-style paths (npm packages, absolute aliases): nothing to check on disk.
+            if (path.startsWith("@") || path.startsWith("./") || path.startsWith("../")) {
+                return@forEach
+            }
+            // Resolve against srcDirectory; try the exact path then with a .ts / .tsx extension.
+            val candidates =
+                listOf(
+                    configuration.srcDirectory.resolve(path),
+                    configuration.srcDirectory.resolve("$path.ts"),
+                    configuration.srcDirectory.resolve("$path.tsx"),
+                )
+            if (candidates.none { it.toFile().exists() }) {
+                missing += qn to path
+            }
+        }
+        if (missing.isNotEmpty()) {
+            val msg = buildString {
+                appendLine(
+                    "[kt2ts] ${missing.size} mapping target(s) not found under " +
+                        "${configuration.srcDirectory}. The TS file may have been moved or " +
+                        "renamed:"
+                )
+                missing.forEach { (qn, path) -> appendLine("  $qn -> $path") }
+            }
+            logger.warn(msg)
+            debugReport?.appendLine(msg)
+        } else {
+            debugReport?.appendLine("all mapping targets exist on disk")
         }
     }
 }
