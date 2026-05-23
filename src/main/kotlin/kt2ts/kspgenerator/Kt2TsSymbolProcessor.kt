@@ -135,10 +135,21 @@ class Kt2TsSymbolProcessor(
                     file.parent.toFile().mkdirs()
                     // TODO un imports writer...
                     val imports = let {
+                        // [doc] a class whose body collapses to `export type X =
+                        // NominalString<'X'>`
+                        // never references its property types; emitting their imports is dead code
+                        // (e.g. an unused `import { UUID }` on every ids.generated.ts).
+                        fun bodyEmitsNoPropertyAccess(d: KSClassDeclaration): Boolean =
+                            d.classKind == ClassKind.ENUM_CLASS ||
+                                ClassMapper.mapClass(
+                                    d,
+                                    configuration.nominalStringMappings,
+                                    configuration.nominalStringImport,
+                                ) != null
                         val dependenciesImportsMapped: List<ClassMapping> =
                             parsed.flatMap { p ->
                                 val d = p.type.declaration as KSClassDeclaration
-                                if (d.classKind == ClassKind.ENUM_CLASS) {
+                                if (bodyEmitsNoPropertyAccess(d)) {
                                     emptyList()
                                 } else {
                                     d.declarations
@@ -160,7 +171,7 @@ class Kt2TsSymbolProcessor(
                             parsed
                                 .flatMap {
                                     val d = it.type.declaration as KSClassDeclaration
-                                    if (d.classKind == ClassKind.ENUM_CLASS) {
+                                    if (bodyEmitsNoPropertyAccess(d)) {
                                         emptyList()
                                     } else {
                                         it.dependencies
