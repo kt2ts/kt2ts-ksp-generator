@@ -11,6 +11,7 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import kotlin.io.path.absolutePathString
@@ -306,34 +307,47 @@ class Kt2TsSymbolProcessor(
             // serveral times
             ShellRunner.run("mv", path.absolutePathString(), destination.absolutePathString())
         }
-        // Delete generated files which does not exist anymore in Kotlin
-        // TODO shoul not be here ! if no modif for kotlin compiler, we must do this check
-        // => we won't be able to with no modifiedFile =s
-        configuration.srcDirectory.resolve(configuration.generatedDirectory).let {
+        // Delete generated .ts files whose Kotlin source has disappeared.
+        // [doc] derive every distinct source root from the files KSP saw, instead of just the
+        // first one — single-source-root projects (the historical assumption) work the same, but
+        // multi-source-root setups (test / main split, multiple modules sharing the output dir)
+        // no longer mass-delete files that simply live in a different root.
+        configuration.srcDirectory.resolve(configuration.generatedDirectory).let { generatedRoot ->
             debugReport?.appendLine("<h1>Removed files</h1>")
-            val kotlinSrc =
-                Paths.get(
-                    modifiedFiles.first().let {
-                        it.filePath
-                            .dropLastWhile { it != '/' }
-                            .dropLast(it.packageName.asString().length + 1)
-                    }
-                )
-            it.toFile().walk().forEach {
-                if (it.extension == generatedFileExtention) {
-                    val relativeFilePath =
-                        it.absolutePath.let {
-                            it.drop(configuration.srcDirectory.pathString.length + 1)
-                                .drop(configuration.generatedDirectory.length + 1)
+            val kotlinSourceRoots: Set<Path> =
+                modifiedFiles
+                    .mapNotNull { f ->
+                        val dir = f.filePath.dropLastWhile { it != '/' }
+                        val pkgPath = f.packageName.asString().replace(".", "/")
+                        when {
+                            pkgPath.isEmpty() -> dir
+                            dir.endsWith("$pkgPath/") -> dir.dropLast(pkgPath.length + 1)
+                            else -> null
                         }
-                    val kotlinFilePath =
-                        kotlinSrc
-                            .resolve(configuration.dropPackage.replace(".", "/"))
-                            .resolve(relativeFilePath.dropLastWhile { it != '.' } + "kt")
-                    if (!kotlinFilePath.exists()) {
-                        debugReport?.appendLine(it.absolutePath)
-                        it.delete()
                     }
+                    .map(Paths::get)
+                    .toSet()
+            if (kotlinSourceRoots.isEmpty()) {
+                debugReport?.appendLine("skipped: no Kotlin source roots inferred from KSP inputs")
+                return@let
+            }
+            generatedRoot.toFile().walk().forEach { tsFile ->
+                if (tsFile.extension != generatedFileExtention) return@forEach
+                val relativeFilePath =
+                    tsFile.absolutePath.let {
+                        it.drop(configuration.srcDirectory.pathString.length + 1)
+                            .drop(configuration.generatedDirectory.length + 1)
+                    }
+                val kotlinRelativePath =
+                    configuration.dropPackage.replace(".", "/").let { prefix ->
+                        val rest = relativeFilePath.dropLastWhile { it != '.' } + "kt"
+                        if (prefix.isEmpty()) rest else "$prefix/$rest"
+                    }
+                val existsInAnyRoot =
+                    kotlinSourceRoots.any { it.resolve(kotlinRelativePath).exists() }
+                if (!existsInAnyRoot) {
+                    debugReport?.appendLine(tsFile.absolutePath)
+                    tsFile.delete()
                 }
             }
         }
