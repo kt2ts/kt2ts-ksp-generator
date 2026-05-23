@@ -43,6 +43,10 @@ data class Kt2TsConfiguration(
     // alongside (`objectType: '…'`) keeps the `$` form regardless, since that is what Jackson
     // Id.NAME produces.
     val nestedClassSeparator: String,
+    // [doc] property name used as the Jackson polymorphic discriminator on sealed subtypes.
+    // Defaults to "objectType" to match historical output; configure to match a different
+    // @JsonTypeInfo(property = "…") used in the Kotlin source (e.g. "_type").
+    val discriminatorProperty: String,
     // [doc] when set, write a kt2ts-manifest.json after generation listing every generated class
     // and its absolute TS import path. Consumer modules can read this manifest to auto-resolve
     // cross-module @GenerateTypescript types without listing them in kt-to-ts-mappings.json.
@@ -77,6 +81,7 @@ data class Kt2TsConfiguration(
                 absoluteImport = options["kt2ts:absoluteImport"] == "true",
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
                 nestedClassSeparator = options["kt2ts:nestedClassSeparator"] ?: "$",
+                discriminatorProperty = options["kt2ts:discriminatorProperty"] ?: "objectType",
                 manifestOutput = options["kt2ts:manifestOutput"]?.let { Paths.get(it).toFile() },
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() },
             )

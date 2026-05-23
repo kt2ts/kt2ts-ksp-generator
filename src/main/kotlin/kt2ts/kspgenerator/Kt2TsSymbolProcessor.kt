@@ -246,6 +246,7 @@ class Kt2TsSymbolProcessor(
                                 configuration.nominalStringImport,
                                 mapClassMapping,
                                 configuration.nestedClassSeparator,
+                                configuration.discriminatorProperty,
                             )
                         )
                     }

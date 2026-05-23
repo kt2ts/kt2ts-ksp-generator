@@ -24,18 +24,24 @@ object ClassWriter {
         nominalStringImport: String?,
         mapClassMapping: ClassMapping?,
         nestedClassSeparator: String = JACKSON_NESTED_SEPARATOR,
+        discriminatorProperty: String = "objectType",
     ): StringBuilder {
         val d = parsed.type.declaration as? KSClassDeclaration ?: throw IllegalArgumentException()
         val mapping = ClassMapper.mapClass(d, nominalStringMappings, nominalStringImport)
         val sb = StringBuilder()
-        val parentIsSealedClass = let {
-            val parentSealedSubClasses =
-                (parsed.type.declaration as KSClassDeclaration)
-                    .superTypes
-                    .mapNotNull { it.resolve().declaration as? KSClassDeclaration }
-                    .flatMap { it.getSealedSubclasses() }
-            parentSealedSubClasses.count() != 0
-        }
+        val sealedParents =
+            (parsed.type.declaration as KSClassDeclaration)
+                .superTypes
+                .mapNotNull { it.resolve().declaration as? KSClassDeclaration }
+                .filter { it.getSealedSubclasses().count() != 0 }
+                .toList()
+        val parentIsSealedClass = sealedParents.isNotEmpty()
+        // [doc] prefer a Jackson @JsonTypeInfo(property = "…") declared on the sealed parent over
+        // the static configuration default, so a project that uses several discriminator names
+        // (e.g. "_type" for one polymorphism hierarchy, "objectType" for another) stays consistent
+        // without having to special-case via global config.
+        val effectiveDiscriminator =
+            sealedParents.firstNotNullOfOrNull { jsonTypeInfoProperty(it) } ?: discriminatorProperty
         if (mapping == null) {
             when (d.classKind) {
                 ClassKind.INTERFACE -> {
@@ -64,7 +70,7 @@ object ClassWriter {
                         if (parentIsSealedClass) {
                             // TODO[tmpl] depends on the jackson annotation
                             sb.appendLine(
-                                "  objectType: '${className(d, JACKSON_NESTED_SEPARATOR)}';"
+                                "  $effectiveDiscriminator: '${className(d, JACKSON_NESTED_SEPARATOR)}';"
                             )
                         }
                         d.declarations.filterIsInstance<KSPropertyDeclaration>().forEach {
@@ -129,7 +135,7 @@ object ClassWriter {
                                 "export interface ${className(d, nestedClassSeparator)} {"
                             )
                             sb.appendLine(
-                                "  objectType: '${className(d, JACKSON_NESTED_SEPARATOR)}';"
+                                "  $effectiveDiscriminator: '${className(d, JACKSON_NESTED_SEPARATOR)}';"
                             )
                             sb.appendLine("}")
                             sb.appendLine("")
@@ -147,6 +153,16 @@ object ClassWriter {
             sb.appendLine("")
         }
         return sb
+    }
+
+    // [doc] inspects @JsonTypeInfo (matched by short name to avoid a Jackson runtime dependency)
+    // on a sealed parent and returns its `property = "…"` argument, or null if absent.
+    private fun jsonTypeInfoProperty(d: KSClassDeclaration): String? {
+        val annotation =
+            d.annotations.firstOrNull { it.shortName.asString() == "JsonTypeInfo" } ?: return null
+        val arg =
+            annotation.arguments.firstOrNull { it.name?.asString() == "property" } ?: return null
+        return (arg.value as? String)?.takeIf { it.isNotBlank() }
     }
 
     fun className(

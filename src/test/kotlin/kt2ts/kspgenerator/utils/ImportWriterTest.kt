@@ -25,6 +25,7 @@ internal class ImportWriterTest {
             absoluteImport = false,
             absoluteImportPrefix = null,
             nestedClassSeparator = "$",
+            discriminatorProperty = "objectType",
             manifestOutput = null,
             debugFile = null,
         )
