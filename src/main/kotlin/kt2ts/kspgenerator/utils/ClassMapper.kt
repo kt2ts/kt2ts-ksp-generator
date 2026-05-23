@@ -18,13 +18,16 @@ object ClassMapper {
         t: KSTypeReference,
         mappings: Map<String, String>,
         mapClassMapping: ClassMapping?,
+        nestedClassSeparator: String = "$",
     ): List<ClassMapping> {
-        val self = listOfNotNull(mapProperty(t, mappings, mapClassMapping))
+        val self = listOfNotNull(mapProperty(t, mappings, mapClassMapping, nestedClassSeparator))
         val args =
             t.element
                 ?.typeArguments
                 ?.mapNotNull { it.type }
-                ?.flatMap { collectMappedTypes(it, mappings, mapClassMapping) } ?: emptyList()
+                ?.flatMap {
+                    collectMappedTypes(it, mappings, mapClassMapping, nestedClassSeparator)
+                } ?: emptyList()
         return self + args
     }
 
@@ -32,6 +35,7 @@ object ClassMapper {
         t: KSTypeReference,
         mappings: Map<String, String>,
         mapClassMapping: ClassMapping?,
+        nestedClassSeparator: String = "$",
     ): ClassMapping? {
         val rawDecl = t.resolve().declaration
         // [doc] check mappings before casting to KSClassDeclaration so type aliases work too.
@@ -54,18 +58,29 @@ object ClassMapper {
                 val type =
                     t.element?.typeArguments?.firstOrNull()?.type
                         ?: throw IllegalArgumentException()
-                val name = nullablePropertyClassName(type, mappings, mapClassMapping)
+                val name =
+                    nullablePropertyClassName(type, mappings, mapClassMapping, nestedClassSeparator)
                 ClassMapping("$name[]")
             }
             Pair::class.qualifiedName -> {
                 val a = t.element?.typeArguments ?: throw IllegalArgumentException()
                 val t1 =
                     (a.firstOrNull()?.type ?: throw IllegalArgumentException()).let {
-                        nullablePropertyClassName(it, mappings, mapClassMapping)
+                        nullablePropertyClassName(
+                            it,
+                            mappings,
+                            mapClassMapping,
+                            nestedClassSeparator,
+                        )
                     }
                 val t2 =
                     (a.getOrNull(1)?.type ?: throw IllegalArgumentException()).let {
-                        nullablePropertyClassName(it, mappings, mapClassMapping)
+                        nullablePropertyClassName(
+                            it,
+                            mappings,
+                            mapClassMapping,
+                            nestedClassSeparator,
+                        )
                     }
                 ClassMapping("[$t1,$t2]")
             }
@@ -83,10 +98,20 @@ object ClassMapper {
                 val t1 =
                     (t.element?.typeArguments?.firstOrNull()?.type
                             ?: throw IllegalArgumentException())
-                        .let { propertyClassMap(it, mappings, mapClassMapping).name }
+                        .let {
+                            propertyClassMap(it, mappings, mapClassMapping, nestedClassSeparator)
+                                .name
+                        }
                 val t2 =
                     (t.element?.typeArguments?.get(1)?.type ?: throw IllegalArgumentException())
-                        .let { nullablePropertyClassName(it, mappings, mapClassMapping) }
+                        .let {
+                            nullablePropertyClassName(
+                                it,
+                                mappings,
+                                mapClassMapping,
+                                nestedClassSeparator,
+                            )
+                        }
                 ClassMapping("${mapClassMapping.name}<$t1,$t2>", mapClassMapping.tsFile)
             }
             Any::class.qualifiedName -> ClassMapping("any")

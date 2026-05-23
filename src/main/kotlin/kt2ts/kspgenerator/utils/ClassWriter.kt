@@ -11,6 +11,11 @@ import kt2ts.kspgenerator.utils.ClassMapper.ClassMapping
 
 object ClassWriter {
 
+    // [doc] separator Jackson Id.NAME uses for nested classes (the JVM binary-name `$`). Always
+    // emitted as-is in the `objectType` discriminator value so wire format keeps matching the
+    // server, independently of the TS-side nestedClassSeparator chosen for type names.
+    private const val JACKSON_NESTED_SEPARATOR = "$"
+
     // TODO[tmpl] about support of Jackson annotations ? field @Ignore
     fun toTs(
         parsed: ClassParser.Parsed,
@@ -18,6 +23,7 @@ object ClassWriter {
         nominalStringMappings: Set<String>,
         nominalStringImport: String?,
         mapClassMapping: ClassMapping?,
+        nestedClassSeparator: String = JACKSON_NESTED_SEPARATOR,
     ): StringBuilder {
         val d = parsed.type.declaration as? KSClassDeclaration ?: throw IllegalArgumentException()
         val mapping = ClassMapper.mapClass(d, nominalStringMappings, nominalStringImport)
@@ -35,8 +41,10 @@ object ClassWriter {
                 ClassKind.INTERFACE -> {
                     val subTypes = d.getSealedSubclasses().toList()
                     if (subTypes.isNotEmpty()) {
-                        sb.appendLine("export type ${className(d)} =")
-                        subTypes.forEach { sb.appendLine("  | ${className(it)}") }
+                        sb.appendLine("export type ${className(d, nestedClassSeparator)} =")
+                        subTypes.forEach {
+                            sb.appendLine("  | ${className(it, nestedClassSeparator)}")
+                        }
                         sb.appendLine("")
                     }
                 }
@@ -52,10 +60,12 @@ object ClassWriter {
                     if (!isSealedClass) {
                         // former if : if (properties.isNotEmpty() || parentIsSealedClass) {
                         // TODO[tmpl] about class which are not data classes
-                        sb.appendLine("export interface ${className(d)} {")
+                        sb.appendLine("export interface ${className(d, nestedClassSeparator)} {")
                         if (parentIsSealedClass) {
                             // TODO[tmpl] depends on the jackson annotation
-                            sb.appendLine("  objectType: '${className(d)}';")
+                            sb.appendLine(
+                                "  objectType: '${className(d, JACKSON_NESTED_SEPARATOR)}';"
+                            )
                         }
                         d.declarations.filterIsInstance<KSPropertyDeclaration>().forEach {
                             val nullableMark =
@@ -64,41 +74,42 @@ object ClassWriter {
                                     Nullability.NOT_NULL,
                                     Nullability.PLATFORM -> ""
                                 }
-                            val c = propertyClassMap(it.type, mappings, mapClassMapping)
+                            val c =
+                                propertyClassMap(
+                                    it.type,
+                                    mappings,
+                                    mapClassMapping,
+                                    nestedClassSeparator,
+                                )
                             sb.appendLine("  ${it.simpleName.asString()}$nullableMark: ${c.name};")
                         }
                         sb.appendLine("}")
                         sb.appendLine("")
                     } else {
                         val subTypes = d.getSealedSubclasses().toList()
-                        //                                .filter {
-                        //                                it.declarations
-                        //
-                        // .filterIsInstance<KSPropertyDeclaration>()
-                        //                                    .toList()
-                        //                                    .isNotEmpty()
-                        //                            }
                         if (subTypes.isNotEmpty()) {
-                            sb.appendLine("export type ${className(d)} =")
-                            subTypes.forEach { sb.appendLine("  | ${className(it)}") }
+                            sb.appendLine("export type ${className(d, nestedClassSeparator)} =")
+                            subTypes.forEach {
+                                sb.appendLine("  | ${className(it, nestedClassSeparator)}")
+                            }
                             sb.appendLine("")
                         }
                     }
                 }
 
                 ClassKind.ENUM_CLASS -> {
-                    sb.appendLine("export type ${className(d)} = ")
+                    sb.appendLine("export type ${className(d, nestedClassSeparator)} = ")
                     d.declarations
                         .filterIsInstance<KSClassDeclaration>()
                         .filter { it.classKind == ClassKind.ENUM_ENTRY }
                         .forEach { sb.appendLine(" | '${it.simpleName.asString()}'") }
                     sb.appendLine("")
-                    //                    d.declarations.toList().forEach { Debug.add("$it
-                    // ${it::class.java}") }
                 }
 
                 ClassKind.ENUM_ENTRY ->
-                    TODO("ClassKind.ENUM_ENTRY is not implemented ${className(d)}")
+                    TODO(
+                        "ClassKind.ENUM_ENTRY is not implemented ${className(d, nestedClassSeparator)}"
+                    )
 
                 ClassKind.OBJECT -> {
                     if (
@@ -108,15 +119,18 @@ object ClassWriter {
                             .isNotEmpty()
                     ) {
                         TODO(
-                            "ClassKind.OBJECT with declarations is not implemented ${className(d)}"
+                            "ClassKind.OBJECT with declarations is not implemented ${className(d, nestedClassSeparator)}"
                         )
                     } else {
                         // TODO[tmpl] not good but the only way to handle EmptyCommandResponse for
                         // the moment
                         if (parentIsSealedClass) {
-                            sb.appendLine("export interface ${className(d)} {")
-                            // TODO[tmpl] depends on the jackson annotation
-                            sb.appendLine("  objectType: '${className(d)}';")
+                            sb.appendLine(
+                                "export interface ${className(d, nestedClassSeparator)} {"
+                            )
+                            sb.appendLine(
+                                "  objectType: '${className(d, JACKSON_NESTED_SEPARATOR)}';"
+                            )
                             sb.appendLine("}")
                             sb.appendLine("")
                         }
@@ -124,16 +138,21 @@ object ClassWriter {
                 }
 
                 ClassKind.ANNOTATION_CLASS ->
-                    TODO("ClassKind.ANNOTATION_CLASS is not implemented ${className(d)}")
+                    TODO(
+                        "ClassKind.ANNOTATION_CLASS is not implemented ${className(d, nestedClassSeparator)}"
+                    )
             }
         } else {
-            sb.appendLine("export type ${className(d)} = ${mapping.name};")
+            sb.appendLine("export type ${className(d, nestedClassSeparator)} = ${mapping.name};")
             sb.appendLine("")
         }
         return sb
     }
 
-    fun className(d: KSDeclaration): String {
+    fun className(
+        d: KSDeclaration,
+        nestedClassSeparator: String = JACKSON_NESTED_SEPARATOR,
+    ): String {
         // [doc] type parameters (T, K…) carry their declaring class as parentDeclaration; do not
         // prefix or they become invalid TS identifiers like "InsertsDto$T".
         if (d is KSTypeParameter) {
@@ -141,7 +160,8 @@ object ClassWriter {
         }
         // TODO is enough ? only KSClassDeclaration can contain inner classes ?
         val parent = d.parentDeclaration as? KSClassDeclaration
-        val prefix = parent?.let { className(it) + "$" } ?: ""
+        val prefix =
+            parent?.let { className(it, nestedClassSeparator) + nestedClassSeparator } ?: ""
         val suffix =
             if (d is KSClassDeclaration && d.typeParameters.isNotEmpty()) {
                 d.typeParameters.joinToString(", ", "<", ">") { it.simpleName.asString() }
@@ -153,12 +173,13 @@ object ClassWriter {
 
     // [doc] like className but without the generic <T, K…> suffix, used at property usage sites
     // where the actual type arguments are appended instead.
-    private fun rawName(d: KSDeclaration): String {
+    private fun rawName(d: KSDeclaration, nestedClassSeparator: String): String {
         if (d is KSTypeParameter) {
             return d.simpleName.asString()
         }
         val parent = d.parentDeclaration as? KSClassDeclaration
-        val prefix = parent?.let { className(it) + "$" } ?: ""
+        val prefix =
+            parent?.let { className(it, nestedClassSeparator) + nestedClassSeparator } ?: ""
         return prefix + d.simpleName.asString()
     }
 
@@ -166,17 +187,18 @@ object ClassWriter {
         t: KSTypeReference,
         mappings: Map<String, String>,
         mapClassMapping: ClassMapping?,
+        nestedClassSeparator: String,
     ): String {
         val mapped = ClassMapper.mapProperty(t, mappings, mapClassMapping)
         if (mapped != null) return mapped.name
         val resolved = t.resolve()
-        val base = rawName(resolved.declaration)
+        val base = rawName(resolved.declaration, nestedClassSeparator)
         val args = t.element?.typeArguments?.mapNotNull { it.type }.orEmpty()
         return if (args.isEmpty()) base
         else
             base +
                 args.joinToString(", ", "<", ">") {
-                    propertyTypeName(it, mappings, mapClassMapping)
+                    propertyTypeName(it, mappings, mapClassMapping, nestedClassSeparator)
                 }
     }
 
@@ -184,16 +206,18 @@ object ClassWriter {
         t: KSTypeReference,
         mappings: Map<String, String>,
         mapClassMapping: ClassMapping?,
+        nestedClassSeparator: String = JACKSON_NESTED_SEPARATOR,
     ): ClassMapping =
         ClassMapper.mapProperty(t, mappings, mapClassMapping)
-            ?: ClassMapping(propertyTypeName(t, mappings, mapClassMapping))
+            ?: ClassMapping(propertyTypeName(t, mappings, mapClassMapping, nestedClassSeparator))
 
     fun nullablePropertyClassName(
         t: KSTypeReference,
         mappings: Map<String, String>,
         mapClassMapping: ClassMapping?,
+        nestedClassSeparator: String = JACKSON_NESTED_SEPARATOR,
     ) =
-        propertyClassMap(t, mappings, mapClassMapping).name.let {
+        propertyClassMap(t, mappings, mapClassMapping, nestedClassSeparator).name.let {
             when (t.resolve().nullability) {
                 Nullability.NULLABLE -> "($it | null)"
                 Nullability.NOT_NULL,

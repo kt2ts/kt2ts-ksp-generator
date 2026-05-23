@@ -163,6 +163,7 @@ class Kt2TsSymbolProcessor(
                                                 it.type,
                                                 configuration.mappings,
                                                 mapClassMapping,
+                                                configuration.nestedClassSeparator,
                                             )
                                         }
                                 }
@@ -182,7 +183,10 @@ class Kt2TsSymbolProcessor(
                                 .mapNotNull { d ->
                                     d.containingFile?.let {
                                         ClassMapper.ClassMapping(
-                                            ClassWriter.className(d),
+                                            ClassWriter.className(
+                                                d,
+                                                configuration.nestedClassSeparator,
+                                            ),
                                             kotlinToTsFile(it, configuration),
                                         )
                                     }
@@ -241,6 +245,7 @@ class Kt2TsSymbolProcessor(
                                 configuration.nominalStringMappings,
                                 configuration.nominalStringImport,
                                 mapClassMapping,
+                                configuration.nestedClassSeparator,
                             )
                         )
                     }

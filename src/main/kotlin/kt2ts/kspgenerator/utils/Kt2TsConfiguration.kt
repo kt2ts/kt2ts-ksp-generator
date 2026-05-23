@@ -38,6 +38,11 @@ data class Kt2TsConfiguration(
     val prettierBinary: String?,
     val absoluteImport: Boolean,
     val absoluteImportPrefix: String?,
+    // [doc] separator used between an outer class name and its nested class in *TS type names*.
+    // Defaults to `$` to preserve historical output. The Jackson discriminator value emitted
+    // alongside (`objectType: '…'`) keeps the `$` form regardless, since that is what Jackson
+    // Id.NAME produces.
+    val nestedClassSeparator: String,
     // [doc] when set, write a kt2ts-manifest.json after generation listing every generated class
     // and its absolute TS import path. Consumer modules can read this manifest to auto-resolve
     // cross-module @GenerateTypescript types without listing them in kt-to-ts-mappings.json.
@@ -71,6 +76,7 @@ data class Kt2TsConfiguration(
                 prettierBinary = options["kt2ts:prettierBinary"],
                 absoluteImport = options["kt2ts:absoluteImport"] == "true",
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
+                nestedClassSeparator = options["kt2ts:nestedClassSeparator"] ?: "$",
                 manifestOutput = options["kt2ts:manifestOutput"]?.let { Paths.get(it).toFile() },
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() },
             )
