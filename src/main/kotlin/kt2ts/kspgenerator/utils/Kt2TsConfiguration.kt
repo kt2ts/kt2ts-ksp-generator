@@ -4,6 +4,7 @@ import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.readText
+import org.json.JSONArray
 import org.json.JSONObject
 
 // TODO[tmpl] the whole conf as a json
@@ -50,11 +51,8 @@ data class Kt2TsConfiguration(
                 generatedDirectory = options["kt2ts:generatedDirectory"] ?: "generated",
                 dropPackage = options["kt2ts:dropPackage"] ?: "",
                 mappings =
-                    options["kt2ts:mappings"]?.let {
-                        Paths.get(it).readText().let {
-                            JSONObject(it).toMap().mapValues { e -> e.value.toString() }
-                        }
-                    } ?: emptyMap(),
+                    options["kt2ts:mappings"]?.let { readMappingsFile(Paths.get(it)) }
+                        ?: emptyMap(),
                 nominalStringMappings =
                     options["kt2ts:nominalStringMappings"]?.split("|")?.toSet() ?: emptySet(),
                 nominalStringImport = options["kt2ts:nominalStringImport"],
@@ -70,6 +68,41 @@ data class Kt2TsConfiguration(
                 absoluteImportPrefix = options["kt2ts:absoluteImportPrefix"],
                 debugFile = options["kt2ts:debugFile"]?.let { Paths.get(it).toFile() },
             )
+        }
+
+        // [doc] reads a kt-to-ts-mappings.json. Supports a reserved `extends` key (string or array
+        // of strings) whose value is interpreted as path(s) relative to the file, which are loaded
+        // recursively. Later (own) entries override earlier (extended) ones; in an extends array,
+        // later files override earlier ones. Cycles raise IllegalArgumentException.
+        internal fun readMappingsFile(path: Path): Map<String, String> =
+            readMappingsFile(path, mutableSetOf())
+
+        private fun readMappingsFile(path: Path, seen: MutableSet<Path>): Map<String, String> {
+            val canonical = path.toRealPath()
+            if (!seen.add(canonical)) {
+                throw IllegalArgumentException(
+                    "Cyclic `extends` in kt-to-ts mappings, file already visited: $canonical"
+                )
+            }
+            val json = JSONObject(canonical.readText())
+            val extendedPaths: List<Path> =
+                when (val v = json.opt("extends")) {
+                    null -> emptyList()
+                    is String -> listOf(canonical.parent.resolve(v))
+                    is JSONArray ->
+                        (0 until v.length()).map { i -> canonical.parent.resolve(v.getString(i)) }
+                    else ->
+                        throw IllegalArgumentException(
+                            "`extends` in $canonical must be a string or array of strings"
+                        )
+                }
+            val inherited =
+                extendedPaths.fold(emptyMap<String, String>()) { acc, p ->
+                    acc + readMappingsFile(p, seen)
+                }
+            val own =
+                json.toMap().filterKeys { it != "extends" }.mapValues { e -> e.value.toString() }
+            return inherited + own
         }
     }
 }
