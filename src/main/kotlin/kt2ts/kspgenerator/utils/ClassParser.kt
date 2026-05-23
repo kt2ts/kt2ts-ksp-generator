@@ -84,15 +84,12 @@ object ClassParser {
             .let { acc ->
                 dependencies
                     // [doc] infinite loop is possible without it
-                    .filter {
-                        it.resolve().declaration.qualifiedName?.asString() !in alreadyNames
-                    }
+                    .filter { it.resolve().declaration.qualifiedName?.asString() !in alreadyNames }
                     .fold(acc) { a, d -> parse(d.resolve(), a, mappings, mapClassMapping) }
             }
             // TODO[tmpl] a priori we should use findActuals
             .let { acc ->
-                val seen =
-                    acc.mapNotNull { it.type.declaration.qualifiedName?.asString() }.toSet()
+                val seen = acc.mapNotNull { it.type.declaration.qualifiedName?.asString() }.toSet()
                 d.getSealedSubclasses()
                     .filter { it.qualifiedName?.asString() !in seen }
                     .fold(acc) { a, d ->

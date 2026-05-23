@@ -173,7 +173,11 @@ object ClassWriter {
         val base = rawName(resolved.declaration)
         val args = t.element?.typeArguments?.mapNotNull { it.type }.orEmpty()
         return if (args.isEmpty()) base
-        else base + args.joinToString(", ", "<", ">") { propertyTypeName(it, mappings, mapClassMapping) }
+        else
+            base +
+                args.joinToString(", ", "<", ">") {
+                    propertyTypeName(it, mappings, mapClassMapping)
+                }
     }
 
     fun propertyClassMap(
