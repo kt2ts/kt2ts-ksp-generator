@@ -32,6 +32,8 @@ publishing {
     }
 }
 
+tasks.test { useJUnitPlatform() }
+
 dependencies {
     implementation(kotlin("stdlib"))
 

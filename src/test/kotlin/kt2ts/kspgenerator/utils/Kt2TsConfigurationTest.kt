@@ -158,6 +158,155 @@ internal class Kt2TsConfigurationTest {
         assertEquals(emptyMap<String, String>(), Kt2TsConfiguration.readManifests("   "))
     }
 
+    // -------------------- kt2ts:config single-file --------------------
+
+    @Test
+    fun `config file populates all settings`(@TempDir tmp: Path) {
+        write(
+            tmp,
+            "kt2ts.json",
+            """
+            {
+              "clientDirectory": ".",
+              "dropPackage": "lite.web",
+              "absoluteImport": true,
+              "absoluteImportPrefix": "@lite-eco/web",
+              "nestedClassSeparator": "_",
+              "discriminatorProperty": "_type",
+              "mapClass": "Record",
+              "nominalStringMappings": ["lite.common.domain.LiteId"],
+              "nominalStringImport": "@lite-eco/shared/utils/nominal-class",
+              "mappings": { "java.util.UUID": "domain/uuid.ts" }
+            }
+            """,
+        )
+        val cfg =
+            Kt2TsConfiguration.init(mapOf("kt2ts:config" to tmp.resolve("kt2ts.json").toString()))
+        assertEquals(tmp.toRealPath(), cfg.clientDirectory.toRealPath())
+        assertEquals("lite.web", cfg.dropPackage)
+        assertEquals(true, cfg.absoluteImport)
+        assertEquals("@lite-eco/web", cfg.absoluteImportPrefix)
+        assertEquals("_", cfg.nestedClassSeparator)
+        assertEquals("_type", cfg.discriminatorProperty)
+        assertEquals("Record", cfg.mapClass)
+        assertEquals(setOf("lite.common.domain.LiteId"), cfg.nominalStringMappings)
+        assertEquals("@lite-eco/shared/utils/nominal-class", cfg.nominalStringImport)
+        assertEquals(mapOf("java.util.UUID" to "domain/uuid.ts"), cfg.mappings)
+    }
+
+    @Test
+    fun `config paths are resolved relative to the config file`(@TempDir tmp: Path) {
+        Files.createDirectories(tmp.resolve("apps/web"))
+        Files.createDirectories(tmp.resolve("packages/shared"))
+        write(
+            tmp,
+            "apps/web/kt2ts.json",
+            """
+            {
+              "clientDirectory": ".",
+              "manifestOutput": "build/kt2ts-manifest.json",
+              "manifests": ["../../packages/shared/kt2ts-manifest.json"]
+            }
+            """,
+        )
+        write(
+            tmp,
+            "packages/shared/kt2ts-manifest.json",
+            """{"classes": {"lite.common.domain.Pdl": "@lite-eco/shared/generated/domain/enedis.generated"}}""",
+        )
+        val cfg =
+            Kt2TsConfiguration.init(
+                mapOf("kt2ts:config" to tmp.resolve("apps/web/kt2ts.json").toString())
+            )
+        val realTmp = tmp.toRealPath()
+        assertEquals(realTmp.resolve("apps/web"), cfg.clientDirectory)
+        assertEquals(
+            realTmp.resolve("apps/web/build/kt2ts-manifest.json").normalize().toString(),
+            cfg.manifestOutput?.absolutePath,
+        )
+        assertEquals(
+            mapOf("lite.common.domain.Pdl" to "@lite-eco/shared/generated/domain/enedis.generated"),
+            cfg.mappings,
+        )
+    }
+
+    @Test
+    fun `config extends merges scalars and deep-merges mappings`(@TempDir tmp: Path) {
+        write(
+            tmp,
+            "defaults.json",
+            """
+            {
+              "clientDirectory": ".",
+              "absoluteImport": true,
+              "mapClass": "Record",
+              "mappings": {
+                "java.util.UUID": "domain/uuid.ts",
+                "java.time.Instant": "domain/datetime.ts"
+              }
+            }
+            """,
+        )
+        write(
+            tmp,
+            "child.json",
+            """
+            {
+              "extends": "defaults.json",
+              "dropPackage": "lite.web",
+              "mappings": {
+                "java.time.Instant": "shared/date.ts",
+                "lite.web.domain.Foo": "interfaces.ts"
+              }
+            }
+            """,
+        )
+        val cfg =
+            Kt2TsConfiguration.init(mapOf("kt2ts:config" to tmp.resolve("child.json").toString()))
+        assertEquals("lite.web", cfg.dropPackage)
+        assertEquals(true, cfg.absoluteImport)
+        assertEquals("Record", cfg.mapClass)
+        assertEquals(
+            mapOf(
+                "java.util.UUID" to "domain/uuid.ts",
+                "java.time.Instant" to "shared/date.ts",
+                "lite.web.domain.Foo" to "interfaces.ts",
+            ),
+            cfg.mappings,
+        )
+    }
+
+    @Test
+    fun `KSP arg overrides config file value`(@TempDir tmp: Path) {
+        write(tmp, "kt2ts.json", """{"clientDirectory": ".", "dropPackage": "lite.web"}""")
+        val cfg =
+            Kt2TsConfiguration.init(
+                mapOf(
+                    "kt2ts:config" to tmp.resolve("kt2ts.json").toString(),
+                    "kt2ts:dropPackage" to "lite.override",
+                )
+            )
+        assertEquals("lite.override", cfg.dropPackage)
+    }
+
+    @Test
+    fun `config mappings can point to an external file`(@TempDir tmp: Path) {
+        write(tmp, "mappings.json", """{"java.util.UUID": "domain/uuid.ts"}""")
+        write(tmp, "kt2ts.json", """{"clientDirectory": ".", "mappings": "mappings.json"}""")
+        val cfg =
+            Kt2TsConfiguration.init(mapOf("kt2ts:config" to tmp.resolve("kt2ts.json").toString()))
+        assertEquals(mapOf("java.util.UUID" to "domain/uuid.ts"), cfg.mappings)
+    }
+
+    @Test
+    fun `config extends cycle raises`(@TempDir tmp: Path) {
+        write(tmp, "a.json", """{"extends": "b.json"}""")
+        write(tmp, "b.json", """{"extends": "a.json"}""")
+        assertThrows(IllegalArgumentException::class.java) {
+            Kt2TsConfiguration.loadConfigFile(tmp.resolve("a.json"))
+        }
+    }
+
     @Test
     fun `indirect cycle raises`(@TempDir tmp: Path) {
         write(tmp, "a.json", """{"extends": "b.json"}""")
